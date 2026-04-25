@@ -1,66 +1,87 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+'use client';
+
+import { Box, Container, Paper, Text, Title, Transition } from '@mantine/core';
+
+import { Dashboard } from '@/features/dashboard/components/Dashboard';
+import { AddStockForm } from '@/features/inventory/components/AddStockForm';
+import { InventoryListing } from '@/features/inventory/components/InventoryListing';
+import { BottomNavigation } from '@/shared/components/BottomNavigation';
+import { useUIStore } from '@/shared/store/useUIStore';
 
 export default function Home() {
+  const { activeTab, setActiveTab } = useUIStore();
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.tsx file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <Box mih="100vh" bg="gray.0">
+      <header
+        style={{
+          padding: '16px',
+          backgroundColor: 'var(--mantine-color-white)',
+          borderBottom: '1px solid var(--mantine-color-gray-2)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 50,
+        }}
+      >
+        <Container size="sm">
+          <Text
+            component="h1"
+            size="xl"
+            fw={900}
+            variant="gradient"
+            gradient={{ from: 'blue', to: 'cyan' }}
           >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+            Stockly
+          </Text>
+        </Container>
+      </header>
+
+      <main style={{ paddingBottom: '80px' }}>
+        <Container size="sm" px="xs" py="md">
+          {/* Dashboard View */}
+          {activeTab === 'dashboard' && (
+            <Transition mounted={activeTab === 'dashboard'} transition="fade" duration={200}>
+              {(styles) => (
+                <Box style={styles}>
+                  <Dashboard />
+                </Box>
+              )}
+            </Transition>
+          )}
+
+          {/* Add Stock View */}
+          {activeTab === 'add' && (
+            <Transition mounted={activeTab === 'add'} transition="fade" duration={200}>
+              {(styles) => (
+                <Box style={styles}>
+                  <Paper p="md" radius="lg" shadow="sm" withBorder>
+                    <Title order={2} mb="lg" px="md">
+                      Add New Stock
+                    </Title>
+                    <AddStockForm onClear={() => setActiveTab('listing')} />
+                  </Paper>
+                </Box>
+              )}
+            </Transition>
+          )}
+
+          {/* Inventory Listing View */}
+          {activeTab === 'listing' && (
+            <Transition mounted={activeTab === 'listing'} transition="fade" duration={200}>
+              {(styles) => (
+                <Box style={styles}>
+                  <Title order={2} mb="md" px="md">
+                    Inventory History
+                  </Title>
+                  <InventoryListing />
+                </Box>
+              )}
+            </Transition>
+          )}
+        </Container>
       </main>
-    </div>
+
+      <BottomNavigation />
+    </Box>
   );
 }
