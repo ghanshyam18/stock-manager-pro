@@ -50,11 +50,11 @@ const theme = createTheme({
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <ColorSchemeScript forceColorScheme="light" />
       </head>
-      <body className={inter.className}>
+      <body className={inter.className} suppressHydrationWarning>
         <MantineProvider theme={theme} forceColorScheme="light">
           <Notifications position="top-right" zIndex={1000} />
           {children}

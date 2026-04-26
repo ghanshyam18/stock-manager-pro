@@ -13,13 +13,26 @@ body {
   height: 100%;
   background-color: var(--background);
   color: var(--foreground);
+  /* Prevent pull-to-refresh on mobile and horizontal bounce */
+  overscroll-behavior: none;
+  overflow-x: hidden;
 }
 
 body {
   margin: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  padding-bottom: 70px; /* Offset for bottom navigation */
+  /* Improve mobile experience */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none; /* Prevent text selection globally for app feel */
+}
+
+/* Allow text selection in inputs and specifically allowed areas */
+input,
+textarea,
+[data-selectable] {
+  user-select: text;
 }
 
 * {
@@ -42,4 +55,21 @@ body {
 
 [data-mantine-color-scheme='dark'] ::-webkit-scrollbar-thumb {
   background: #373a40;
+}
+
+/* Smooth transitions for all theme changes */
+body {
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+.hover-card {
+  transition: all 0.2s ease;
+}
+
+.hover-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--mantine-shadow-md);
+  border-color: var(--mantine-color-blue-3) !important;
 }

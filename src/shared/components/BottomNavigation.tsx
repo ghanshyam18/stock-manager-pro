@@ -17,20 +17,22 @@ export function BottomNavigation() {
   return (
     <Paper
       component="nav"
-      shadow="md"
-      p="xs"
+      shadow="xl"
       style={{
         position: 'fixed',
         bottom: 0,
         left: 0,
         right: 0,
-        zIndex: 100,
-        borderRadius: '20px 20px 0 0',
-        border: '1px solid var(--mantine-color-gray-2)',
+        zIndex: 300,
+        borderRadius: '28px 28px 0 0',
+        borderTop: '1px solid rgba(0, 0, 0, 0.05)',
         backgroundColor: 'var(--mantine-color-white)',
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)',
+        paddingTop: '12px',
+        boxShadow: '0 -8px 25px rgba(0, 0, 0, 0.08)',
       }}
     >
-      <Flex justify="space-around" align="center">
+      <Flex justify="space-around" align="center" px="md">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
           const Icon = tab.icon;
@@ -44,29 +46,53 @@ export function BottomNavigation() {
                 flexDirection: 'column',
                 alignItems: 'center',
                 flex: 1,
-                padding: '8px 0',
-                transition: 'all 0.2s ease',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                position: 'relative',
               }}
             >
               <Box
                 style={{
-                  color: isActive ? 'var(--mantine-color-blue-6)' : 'var(--mantine-color-gray-5)',
-                  transform: isActive ? 'scale(1.1)' : 'scale(1)',
-                  transition: 'transform 0.2s ease',
+                  color: isActive ? 'var(--mantine-color-blue-6)' : 'var(--mantine-color-gray-4)',
+                  transform: isActive ? 'translateY(-4px) scale(1.15)' : 'translateY(0) scale(1)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  width: 44,
+                  height: 44,
+                  borderRadius: '14px',
+                  backgroundColor: isActive ? 'var(--mantine-color-blue-0)' : 'transparent',
                 }}
               >
                 <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
               </Box>
               <Text
-                size="xs"
-                fw={isActive ? 700 : 500}
+                size="10px"
+                fw={isActive ? 800 : 600}
+                tt="uppercase"
+                lts={0.5}
                 style={{
-                  color: isActive ? 'var(--mantine-color-blue-6)' : 'var(--mantine-color-gray-6)',
-                  marginTop: 4,
+                  color: isActive ? 'var(--mantine-color-blue-7)' : 'var(--mantine-color-gray-5)',
+                  marginTop: 6,
+                  transition: 'color 0.3s ease',
+                  opacity: isActive ? 1 : 0.7,
                 }}
               >
                 {tab.label}
               </Text>
+
+              {isActive && (
+                <Box
+                  style={{
+                    position: 'absolute',
+                    bottom: -8,
+                    width: 4,
+                    height: 4,
+                    borderRadius: '50%',
+                    backgroundColor: 'var(--mantine-color-blue-6)',
+                  }}
+                />
+              )}
             </UnstyledButton>
           );
         })}

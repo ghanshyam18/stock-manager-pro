@@ -15,6 +15,7 @@ import { notifications } from '@mantine/notifications';
 import { Save, Upload, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import { getTodayISODate } from '@/shared/utils/date';
 import { compressImage } from '@/shared/utils/image';
 
 import { db } from '../services/db';
@@ -37,7 +38,7 @@ export function AddStockForm({ onClear }: { onClear?: () => void }) {
       designNo: '',
       quantity: 1,
       price: 0,
-      date: new Date().toISOString().split('T')[0],
+      date: getTodayISODate(),
       image: '',
     },
     validate: {
