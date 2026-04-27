@@ -5,9 +5,13 @@ import './globals.css';
 import { ColorSchemeScript, createTheme, MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import { Plus_Jakarta_Sans } from 'next/font/google';
 
-const inter = Inter({ subsets: ['latin'] });
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-jakarta',
+});
 
 export const metadata: Metadata = {
   title: 'Stockly | Inventory Management',
@@ -30,12 +34,12 @@ export const viewport: Viewport = {
 
 const theme = createTheme({
   primaryColor: 'blue',
-  fontFamily: inter.style.fontFamily,
+  fontFamily: plusJakartaSans.style.fontFamily,
   defaultRadius: 'md',
   components: {
     Button: {
       defaultProps: {
-        fw: 500,
+        fw: 600, // Slightly bolder for Jakarta
       },
     },
     Card: {
@@ -54,7 +58,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <ColorSchemeScript forceColorScheme="light" />
       </head>
-      <body className={inter.className} suppressHydrationWarning>
+      <body className={plusJakartaSans.className} suppressHydrationWarning>
         <MantineProvider theme={theme} forceColorScheme="light">
           <Notifications position="top-right" zIndex={1000} />
           {children}

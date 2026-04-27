@@ -1,10 +1,9 @@
 'use client';
 
-import { Box, Container, Paper, Text, Title, Transition } from '@mantine/core';
+import { Box, Container, Group, Paper, Text, Title, Transition } from '@mantine/core';
 
-import { Dashboard } from '@/features/dashboard/components/Dashboard';
 import { AddStockForm } from '@/features/inventory/components/AddStockForm';
-import { InventoryListing } from '@/features/inventory/components/InventoryListing';
+import { InventoryView } from '@/features/inventory/components/InventoryView';
 import { BottomNavigation } from '@/shared/components/BottomNavigation';
 import { usePreventExit } from '@/shared/hooks/usePreventExit';
 import { useUIStore } from '@/shared/store/useUIStore';
@@ -46,12 +45,12 @@ export default function Home() {
 
       <main style={{ paddingBottom: '100px' }}>
         <Container size="sm" px="xs" py="md">
-          {/* Dashboard View */}
-          {activeTab === 'dashboard' && (
-            <Transition mounted={activeTab === 'dashboard'} transition="fade" duration={300}>
+          {/* Inventory View (Unified Dashboard + Listing) */}
+          {activeTab === 'inventory' && (
+            <Transition mounted={activeTab === 'inventory'} transition="fade" duration={300}>
               {(styles) => (
                 <Box style={styles}>
-                  <Dashboard />
+                  <InventoryView />
                 </Box>
               )}
             </Transition>
@@ -66,27 +65,8 @@ export default function Home() {
                     <Title order={2} mb="xl" px="xs" fw={900}>
                       Add New Stock
                     </Title>
-                    <AddStockForm onClear={() => setActiveTab('listing')} />
+                    <AddStockForm onClear={() => setActiveTab('inventory')} />
                   </Paper>
-                </Box>
-              )}
-            </Transition>
-          )}
-
-          {/* Inventory Listing View */}
-          {activeTab === 'listing' && (
-            <Transition mounted={activeTab === 'listing'} transition="fade" duration={300}>
-              {(styles) => (
-                <Box style={styles}>
-                  <Box mb="md" px="xs">
-                    <Title order={1} fw={900} size="h2">
-                      Inventory History
-                    </Title>
-                    <Text color="dimmed" size="sm" fw={500}>
-                      Track all stock changes and entries
-                    </Text>
-                  </Box>
-                  <InventoryListing />
                 </Box>
               )}
             </Transition>
@@ -98,6 +78,3 @@ export default function Home() {
     </Box>
   );
 }
-
-// Add Group import to Mantine components above
-import { Group } from '@mantine/core';

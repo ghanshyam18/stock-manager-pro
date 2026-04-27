@@ -1,6 +1,10 @@
 import imageCompression from 'browser-image-compression';
 
-export async function compressImage(file: File): Promise<string> {
+/**
+ * Compresses an image file and returns a Blob.
+ * Storing as Blob in IndexedDB is significantly more memory-efficient than Base64.
+ */
+export async function compressImage(file: File): Promise<Blob> {
   const options = {
     maxSizeMB: 0.2, // 200KB
     maxWidthOrHeight: 800,
@@ -8,13 +12,7 @@ export async function compressImage(file: File): Promise<string> {
   };
 
   try {
-    const compressedFile = await imageCompression(file, options);
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(compressedFile);
-    });
+    return await imageCompression(file, options);
   } catch (error) {
     console.error('Image compression error:', error);
     throw error;

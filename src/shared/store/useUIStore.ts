@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type ActiveTab = 'dashboard' | 'add' | 'listing';
+export type ActiveTab = 'inventory' | 'add';
 
 interface UIState {
   activeTab: ActiveTab;
@@ -10,7 +10,7 @@ interface UIState {
 }
 
 export const useUIStore = create<UIState>((set) => ({
-  activeTab: 'dashboard',
+  activeTab: 'inventory',
   setActiveTab: (tab) => set({ activeTab: tab }),
   isAddModalOpen: false,
   setAddModalOpen: (open) => set({ isAddModalOpen: open }),

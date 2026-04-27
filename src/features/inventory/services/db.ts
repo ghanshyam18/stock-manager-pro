@@ -3,7 +3,7 @@ import Dexie, { type Table } from 'dexie';
 export interface InventoryItem {
   id?: string;
   designNo: string;
-  image: string; // Base64 string
+  image: Blob | string; // Supports both binary Blob and legacy/seed Base64 strings
   quantity: number;
   price: number;
   date: string; // ISO date

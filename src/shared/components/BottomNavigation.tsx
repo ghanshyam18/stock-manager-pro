@@ -1,23 +1,30 @@
 'use client';
 
 import { Box, Flex, Paper, Text, UnstyledButton } from '@mantine/core';
-import { LayoutDashboard, List, PlusCircle } from 'lucide-react';
+import { PackageSearch, PlusCircle } from 'lucide-react';
 
 import { useUIStore } from '@/shared/store/useUIStore';
 
+/**
+ * BottomNavigation handles the primary app-level tab switching.
+ * Optimized for high-standard visual stability:
+ * - Uses solid background to prevent transparency flickering.
+ * - Hardware accelerated for smooth scrolling.
+ * - Precision-aligned to the bottom edge.
+ */
 export function BottomNavigation() {
   const { activeTab, setActiveTab } = useUIStore();
 
   const tabs = [
-    { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { id: 'inventory', icon: PackageSearch, label: 'Inventory' },
     { id: 'add', icon: PlusCircle, label: 'Add Stock' },
-    { id: 'listing', icon: List, label: 'Inventory' },
   ] as const;
 
   return (
     <Paper
       component="nav"
       shadow="xl"
+      radius={0} // Ensure no default bottom radius
       style={{
         position: 'fixed',
         bottom: 0,
@@ -26,11 +33,16 @@ export function BottomNavigation() {
         zIndex: 300,
         borderRadius: '28px 28px 0 0',
         borderTop: '1px solid rgba(0, 0, 0, 0.05)',
-        backgroundColor: 'var(--mantine-color-white)',
+        backgroundColor: '#ffffff', // Use solid hex to prevent transparency gaps
+        // Use padding-bottom to handle safe areas on mobile devices
         paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)',
         paddingTop: '12px',
         boxShadow: '0 -8px 25px rgba(0, 0, 0, 0.08)',
+        // Force hardware acceleration for pixel-perfect rendering
+        transform: 'translateZ(0)',
+        backfaceVisibility: 'hidden',
       }}
+      data-testid="bottom-navigation"
     >
       <Flex justify="space-around" align="center" px="md">
         {tabs.map((tab) => {
@@ -49,6 +61,8 @@ export function BottomNavigation() {
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 position: 'relative',
               }}
+              data-testid={`nav-tab-${tab.id}`}
+              aria-label={`Switch to ${tab.label}`}
             >
               <Box
                 style={{
