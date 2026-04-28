@@ -1,7 +1,7 @@
-import { Box, Center, Group, Loader, Stack, Text } from '@mantine/core';
-import { useWindowVirtualizer } from '@tanstack/react-virtual';
+import { Center, Group, Loader, Stack, Text } from '@mantine/core';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { Search } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { type InventoryItem } from '../services/db';
 import { InventoryItemCard } from './InventoryItemCard';
@@ -9,12 +9,19 @@ import { InventoryItemCard } from './InventoryItemCard';
 interface InventoryHistoryListProps {
   items: InventoryItem[];
   isMobile: boolean;
-  onDelete: (id?: string) => void;
+  onDelete: (id?: number) => void;
   onSelect: (item: InventoryItem) => void;
   loadMore: () => void;
   hasMore: boolean;
+  totalCount: number;
+  isLoadingMore: boolean; // Added to track active loading state
 }
 
+/**
+ * InventoryHistoryList - SaaS-Grade Virtualization.
+ * Updated: Uses isLoadingMore to provide accurate visual feedback
+ * during paginated loads.
+ */
 export function InventoryHistoryList({
   items,
   isMobile,
@@ -22,42 +29,37 @@ export function InventoryHistoryList({
   onSelect,
   loadMore,
   hasMore,
+  totalCount,
+  isLoadingMore,
 }: InventoryHistoryListProps) {
-  const parentRef = useRef<HTMLDivElement>(null);
-  const [scrollMargin, setScrollMargin] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (parentRef.current) {
-      setScrollMargin(parentRef.current.offsetTop);
-    }
-  }, [items]);
-
-  const rowVirtualizer = useWindowVirtualizer({
+  const rowVirtualizer = useVirtualizer({
     count: items.length,
-    estimateSize: () => (isMobile ? 130 : 140),
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => (isMobile ? 140 : 130),
     overscan: 10,
-    scrollMargin,
   });
 
   const virtualItems = rowVirtualizer.getVirtualItems();
 
-  // Load more when the last item is visible
+  // Infinite loader trigger
   useEffect(() => {
-    const lastItem = virtualItems[virtualItems.length - 1];
-    if (!lastItem) return;
-
-    if (lastItem.index >= items.length - 1 && hasMore) {
-      loadMore();
+    if (virtualItems.length > 0) {
+      const lastItem = virtualItems[virtualItems.length - 1];
+      if (lastItem.index >= items.length - 10 && hasMore && !isLoadingMore) {
+        loadMore();
+      }
     }
-  }, [virtualItems, items.length, hasMore, loadMore]);
+  }, [virtualItems, items.length, hasMore, loadMore, isLoadingMore]);
 
   if (items.length === 0) {
     return (
       <Center h={300}>
         <Stack align="center" gap="sm">
           <Search size={48} strokeWidth={1} style={{ opacity: 0.5 }} />
-          <Text color="dimmed" fw={500}>
-            No history found
+          <Text c="dimmed" fw={500}>
+            No items match your filters
           </Text>
         </Stack>
       </Center>
@@ -65,49 +67,68 @@ export function InventoryHistoryList({
   }
 
   return (
-    <Box px="xs">
-      <Box
-        ref={parentRef}
+    <div
+      ref={scrollRef}
+      style={{
+        height: '100%',
+        width: '100%',
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        WebkitOverflowScrolling: 'touch',
+        position: 'relative',
+      }}
+    >
+      <div
         style={{
           height: `${rowVirtualizer.getTotalSize()}px`,
           width: '100%',
           position: 'relative',
-          paddingBottom: '40px',
         }}
-        data-testid="inventory-virtual-list"
       >
         {virtualItems.map((virtualRow) => {
           const item = items[virtualRow.index];
           if (!item) return null;
+
           return (
-            <Box
+            <div
               key={virtualRow.key}
+              data-index={virtualRow.index}
+              ref={rowVirtualizer.measureElement}
               style={{
                 position: 'absolute',
                 top: 0,
                 left: 0,
                 width: '100%',
-                height: `${virtualRow.size}px`,
-                transform: `translateY(${virtualRow.start - scrollMargin}px)`,
-                padding: '6px 0',
+                transform: `translateY(${virtualRow.start}px)`,
+                padding: '4px 0',
+                willChange: 'transform',
               }}
             >
               <InventoryItemCard item={item} onDelete={onDelete} onSelect={onSelect} />
-            </Box>
+            </div>
           );
         })}
-      </Box>
+      </div>
 
-      {hasMore && (
-        <Center py="xl">
+      {/* Enhanced Loader Footer */}
+      <Center py="xl" pb={100}>
+        {isLoadingMore ? (
           <Group gap="sm">
             <Loader size="sm" color="blue" />
-            <Text size="sm" color="dimmed" fw={600}>
-              Loading more entries...
+            <Text size="sm" c="dimmed" fw={600}>
+              Fetching next batch... ({items.length} loaded)
             </Text>
           </Group>
-        </Center>
-      )}
-    </Box>
+        ) : hasMore ? (
+          <Text size="xs" c="dimmed">
+            Scroll for more (Total: {totalCount})
+          </Text>
+        ) : (
+          <Text size="sm" c="dimmed" fw={600}>
+            All {totalCount} items loaded
+          </Text>
+        )}
+      </Center>
+    </div>
   );
 }

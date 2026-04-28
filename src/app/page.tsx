@@ -8,6 +8,11 @@ import { BottomNavigation } from '@/shared/components/BottomNavigation';
 import { usePreventExit } from '@/shared/hooks/usePreventExit';
 import { useUIStore } from '@/shared/store/useUIStore';
 
+/**
+ * Main Entry Point.
+ * High-Class Refactor: Uses a flex-column layout to ensure the main content
+ * can precisely fill the viewport for stable virtualization.
+ */
 export default function Home() {
   const { activeTab, setActiveTab } = useUIStore();
 
@@ -15,15 +20,20 @@ export default function Home() {
   usePreventExit(true);
 
   return (
-    <Box mih="100vh" bg="gray.1">
+    <Box
+      bg="gray.1"
+      style={{
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden', // Prevent double scrollbars
+      }}
+    >
       <header
         style={{
           padding: '12px 16px',
-          backgroundColor: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(12px)',
+          backgroundColor: 'white',
           borderBottom: '1px solid var(--mantine-color-gray-2)',
-          position: 'sticky',
-          top: 0,
           zIndex: 200,
         }}
       >
@@ -43,13 +53,20 @@ export default function Home() {
         </Container>
       </header>
 
-      <main style={{ paddingBottom: '100px' }}>
-        <Container size="sm" px="xs" py="md">
+      <main style={{ flexGrow: 1, position: 'relative', overflow: 'hidden' }}>
+        <Container
+          size="sm"
+          px="xs"
+          py="md"
+          style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+        >
           {/* Inventory View (Unified Dashboard + Listing) */}
           {activeTab === 'inventory' && (
             <Transition mounted={activeTab === 'inventory'} transition="fade" duration={300}>
               {(styles) => (
-                <Box style={styles}>
+                <Box
+                  style={{ ...styles, height: '100%', display: 'flex', flexDirection: 'column' }}
+                >
                   <InventoryView />
                 </Box>
               )}
@@ -60,7 +77,7 @@ export default function Home() {
           {activeTab === 'add' && (
             <Transition mounted={activeTab === 'add'} transition="fade" duration={300}>
               {(styles) => (
-                <Box style={styles}>
+                <Box style={{ ...styles, flexGrow: 1, overflowY: 'auto', paddingBottom: '80px' }}>
                   <Paper p="lg" radius="24px" shadow="md" withBorder bg="white">
                     <Title order={2} mb="xl" px="xs" fw={900}>
                       Add New Stock

@@ -8,7 +8,7 @@ import { type InventoryItem } from '../services/db';
 
 interface InventoryItemCardProps {
   item: InventoryItem;
-  onDelete: (id?: string) => void;
+  onDelete: (id?: number) => void;
   onSelect: (item: InventoryItem) => void;
 }
 

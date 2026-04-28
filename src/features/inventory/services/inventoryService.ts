@@ -3,11 +3,11 @@ import { notifications } from '@mantine/notifications';
 import { db, type InventoryItem } from './db';
 
 export const inventoryService = {
-  async deleteItem(id?: string) {
+  async deleteItem(id?: number) {
     if (!id) return false;
 
     try {
-      await db.inventory.delete(Number(id));
+      await db.inventory.delete(id);
       notifications.show({
         title: 'Deleted',
         message: 'Item removed from history',
@@ -25,12 +25,14 @@ export const inventoryService = {
     }
   },
 
-  async addStock(item: Omit<InventoryItem, 'id' | 'createdAt'>) {
+  async addStock(item: Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>) {
     try {
+      const now = Date.now();
       await db.inventory.add({
         ...item,
-        createdAt: Date.now(),
-      });
+        createdAt: now,
+        updatedAt: now,
+      } as InventoryItem);
       notifications.show({
         title: 'Success',
         message: 'Stock item added successfully',

@@ -1,7 +1,8 @@
+import { type Collection } from 'dexie';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useCallback, useState } from 'react';
+import { useCallback, useDeferredValue, useEffect, useState } from 'react';
 
-import { db } from '../services/db';
+import { db, type InventoryItem } from '../services/db';
 
 export interface DateFilter {
   start: string;
@@ -12,84 +13,109 @@ const PAGE_SIZE = 50;
 
 /**
  * useInventory hook manages paginated data fetching and filtering.
- * High-standard approach: Separates stats calculation from paginated list fetching.
+ * High-Performance: Uses DB-level limit() and a loading gate to ensure
+ * smooth, scalable data handling.
  */
 export function useInventory() {
   const [search, setSearch] = useState('');
+  const deferredSearch = useDeferredValue(search);
   const [dateFilter, setDateFilter] = useState<DateFilter>({
     start: '',
     end: '',
   });
   const [limit, setLimit] = useState(PAGE_SIZE);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  // 1. Stats Query: Always calculate totals over the full FILTERED dataset
-  // We use a specialized query that only fetches the fields needed for stats
+  // Helper to apply filters to a collection
+  const applyFilters = useCallback(
+    (collection: Collection<InventoryItem, number>) => {
+      let filtered = collection;
+
+      if (deferredSearch) {
+        const lowerSearch = deferredSearch.toLowerCase();
+        filtered = filtered.filter((item: InventoryItem) =>
+          item.designNo.toLowerCase().includes(lowerSearch)
+        );
+      }
+
+      if (dateFilter.start || dateFilter.end) {
+        filtered = filtered.filter((item: InventoryItem) => {
+          const matchesStart = !dateFilter.start || item.date >= dateFilter.start;
+          const matchesEnd = !dateFilter.end || item.date <= dateFilter.end;
+          return matchesStart && matchesEnd;
+        });
+      }
+
+      return filtered;
+    },
+    [deferredSearch, dateFilter]
+  );
+
+  // 1. Stats Query
   const stats = useLiveQuery(async () => {
-    const query = db.inventory.orderBy('date').reverse();
+    const collection = db.inventory.orderBy('date').reverse();
+    const filteredCollection = applyFilters(collection);
 
-    // Apply filters to the stats query
-    const items = await query.toArray();
+    const totalCount = await filteredCollection.count();
 
-    const filtered = items.filter((item) => {
-      const matchesSearch = item.designNo.toLowerCase().includes(search.toLowerCase());
-      const matchesDate =
-        (!dateFilter.start || item.date >= dateFilter.start) &&
-        (!dateFilter.end || item.date <= dateFilter.end);
-      return matchesSearch && matchesDate;
+    let totalQty = 0;
+    let totalValue = 0;
+    const designs = new Set<string>();
+
+    await filteredCollection.each((item) => {
+      totalQty += item.quantity;
+      totalValue += item.quantity * item.price;
+      designs.add(item.designNo);
     });
 
     return {
-      totalQty: filtered.reduce((sum, item) => sum + item.quantity, 0),
-      totalValue: filtered.reduce((sum, item) => sum + item.quantity * item.price, 0),
-      uniqueDesigns: new Set(filtered.map((i) => i.designNo)).size,
-      totalCount: filtered.length,
+      totalQty,
+      totalValue,
+      uniqueDesigns: designs.size,
+      totalCount,
     };
-  }, [search, dateFilter]);
+  }, [deferredSearch, dateFilter]);
 
   // 2. Paginated List Query
   const filteredItems = useLiveQuery(async () => {
-    const query = db.inventory.orderBy('date').reverse();
+    const collection = db.inventory.orderBy('date').reverse();
+    const filteredCollection = applyFilters(collection);
 
-    // Fetch all for filtering (Dexie doesn't support complex cross-field filtering in queries easily)
-    // However, since we store images as Blobs, this is still very memory-efficient.
-    const items = await query.toArray();
+    const result = await filteredCollection.limit(limit).toArray();
 
-    const filtered = items.filter((item) => {
-      const matchesSearch = item.designNo.toLowerCase().includes(search.toLowerCase());
-      const matchesDate =
-        (!dateFilter.start || item.date >= dateFilter.start) &&
-        (!dateFilter.end || item.date <= dateFilter.end);
-      return matchesSearch && matchesDate;
-    });
-
-    // Return only the slice up to the current limit
-    return filtered.slice(0, limit);
-  }, [search, dateFilter, limit]);
+    // Reset loading state once data is retrieved
+    setIsLoadingMore(false);
+    return result;
+  }, [deferredSearch, dateFilter, limit]);
 
   const designSuggestions = useLiveQuery(async () => {
     const keys = await db.inventory.orderBy('designNo').uniqueKeys();
     return keys.map((k) => String(k));
   }, []);
 
+  // Reset pagination when filters change
+  useEffect(() => {
+    setLimit(PAGE_SIZE);
+  }, [deferredSearch, dateFilter]);
+
   // Handlers
   const handleSearchChange = useCallback((val: string) => {
     setSearch(val);
-    setLimit(PAGE_SIZE); // Reset pagination on search
   }, []);
 
   const handleDateFilterChange = useCallback((filter: DateFilter) => {
     setDateFilter(filter);
-    setLimit(PAGE_SIZE); // Reset pagination on filter
   }, []);
 
   const loadMore = useCallback(() => {
-    if (stats && filteredItems && filteredItems.length < stats.totalCount) {
+    if (!isLoadingMore && stats && filteredItems && filteredItems.length < stats.totalCount) {
+      setIsLoadingMore(true);
       setLimit((prev) => prev + PAGE_SIZE);
     }
-  }, [stats, filteredItems]);
+  }, [isLoadingMore, stats, filteredItems]);
 
   return {
-    allItems: !!filteredItems, // Flag for loading state
+    allItems: !!filteredItems,
     filteredItems: filteredItems || [],
     designSuggestions,
     stats: stats || { totalQty: 0, totalValue: 0, uniqueDesigns: 0, totalCount: 0 },
@@ -100,5 +126,7 @@ export function useInventory() {
     isFilterActive: !!(dateFilter.start || dateFilter.end),
     loadMore,
     hasMore: (filteredItems?.length || 0) < (stats?.totalCount || 0),
+    isLoadingMore,
+    isStale: search !== deferredSearch,
   };
 }

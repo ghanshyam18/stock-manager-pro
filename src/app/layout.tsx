@@ -17,6 +17,14 @@ export const metadata: Metadata = {
   title: 'Stockly | Inventory Management',
   description: 'Fast, offline-first stock management for clothing inventory',
   manifest: '/manifest.json',
+  icons: {
+    icon: [
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -32,14 +40,33 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
+// Premium Theme Configuration
 const theme = createTheme({
-  primaryColor: 'blue',
+  primaryColor: 'brand',
+  colors: {
+    brand: [
+      '#eef3ff',
+      '#dce4ff',
+      '#bac8ff',
+      '#91a7ff',
+      '#748ffc',
+      '#5c7cfa',
+      '#4c6ef5',
+      '#4263eb',
+      '#3b5bdb',
+      '#364fc7',
+    ],
+  },
   fontFamily: plusJakartaSans.style.fontFamily,
   defaultRadius: 'md',
   components: {
     Button: {
       defaultProps: {
-        fw: 600, // Slightly bolder for Jakarta
+        fw: 600,
+        loaderProps: { type: 'dots' },
+      },
+      styles: {
+        root: { transition: 'transform 100ms ease' },
       },
     },
     Card: {
@@ -47,6 +74,21 @@ const theme = createTheme({
         padding: 'md',
         radius: 'lg',
         withBorder: true,
+      },
+      styles: {
+        root: {
+          backgroundColor: 'var(--mantine-color-body)',
+          boxShadow: 'var(--mantine-shadow-xs)',
+        },
+      },
+    },
+    Modal: {
+      defaultProps: {
+        radius: 'lg',
+        overlayProps: {
+          blur: 3,
+          opacity: 0.55,
+        },
       },
     },
   },
