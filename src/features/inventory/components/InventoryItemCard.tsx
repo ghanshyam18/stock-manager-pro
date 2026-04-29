@@ -1,5 +1,6 @@
 import { ActionIcon, Badge, Card, Group, Stack, Text, Title } from '@mantine/core';
 import { Calendar, Trash2 } from 'lucide-react';
+import { memo } from 'react';
 
 import { SafeImage } from '@/shared/components/SafeImage';
 import { formatDate } from '@/shared/utils/date';
@@ -12,14 +13,20 @@ interface InventoryItemCardProps {
   onSelect: (item: InventoryItem) => void;
 }
 
-export function InventoryItemCard({ item, onDelete, onSelect }: InventoryItemCardProps) {
+export const InventoryItemCard = memo(({ item, onDelete, onSelect }: InventoryItemCardProps) => {
   return (
     <Card
       padding="xs"
-      radius="lg"
+      radius="xl"
       withBorder
-      shadow="xs"
-      style={{ backgroundColor: 'var(--mantine-color-white)', height: '100%' }}
+      shadow="sm"
+      style={{
+        backgroundColor: 'var(--mantine-color-white)',
+        height: '100%',
+        transition: 'transform 200ms ease, box-shadow 200ms ease',
+        cursor: 'pointer',
+      }}
+      onClick={() => onSelect(item)}
       data-testid={`inventory-item-${item.designNo}`}
     >
       <Group wrap="nowrap" gap="sm" align="center" style={{ height: '100%' }}>
@@ -27,10 +34,9 @@ export function InventoryItemCard({ item, onDelete, onSelect }: InventoryItemCar
           src={item.image}
           w={100}
           h={100}
-          radius="md"
+          radius="lg"
           alt={item.designNo}
-          style={{ cursor: 'pointer', objectFit: 'cover' }}
-          onClick={() => onSelect(item)}
+          style={{ objectFit: 'cover' }}
           data-testid="item-image"
         />
         <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
@@ -38,14 +44,13 @@ export function InventoryItemCard({ item, onDelete, onSelect }: InventoryItemCar
             <Title
               order={3}
               size="h5"
-              fw={800}
+              fw={900}
               style={{
-                cursor: 'pointer',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
+                letterSpacing: '-0.3px',
               }}
-              onClick={() => onSelect(item)}
               data-testid="item-title"
             >
               {item.designNo}
@@ -53,9 +58,12 @@ export function InventoryItemCard({ item, onDelete, onSelect }: InventoryItemCar
             <ActionIcon
               variant="subtle"
               color="red"
-              radius="md"
-              size="sm"
-              onClick={() => onDelete(item.id)}
+              radius="xl"
+              size="md"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(item.id);
+              }}
               data-testid="delete-item-button"
             >
               <Trash2 size={16} />
@@ -63,15 +71,15 @@ export function InventoryItemCard({ item, onDelete, onSelect }: InventoryItemCar
           </Group>
           <Group gap={4}>
             <Calendar size={12} color="var(--mantine-color-gray-5)" />
-            <Text size="xs" color="dimmed" fw={500}>
+            <Text size="xs" c="dimmed" fw={600}>
               {formatDate(item.date)}
             </Text>
           </Group>
-          <Group gap="xs" mt={4}>
-            <Badge size="sm" variant="light" color="blue" radius="sm">
+          <Group gap="xs" mt={6}>
+            <Badge size="sm" variant="light" color="blue" radius="md" fw={800}>
               {item.quantity} Pcs
             </Badge>
-            <Badge size="sm" variant="light" color="green" radius="sm">
+            <Badge size="sm" variant="light" color="teal" radius="md" fw={800}>
               ₹{item.price}
             </Badge>
           </Group>
@@ -79,4 +87,6 @@ export function InventoryItemCard({ item, onDelete, onSelect }: InventoryItemCar
       </Group>
     </Card>
   );
-}
+});
+
+InventoryItemCard.displayName = 'InventoryItemCard';

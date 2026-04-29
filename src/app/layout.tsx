@@ -2,10 +2,11 @@ import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
 import './globals.css';
 
-import { ColorSchemeScript, createTheme, MantineProvider } from '@mantine/core';
-import { Notifications } from '@mantine/notifications';
+import { ColorSchemeScript } from '@mantine/core';
 import type { Metadata, Viewport } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
+
+import { Providers } from './Providers';
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -40,71 +41,14 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
-// Premium Theme Configuration
-const theme = createTheme({
-  primaryColor: 'brand',
-  colors: {
-    brand: [
-      '#eef3ff',
-      '#dce4ff',
-      '#bac8ff',
-      '#91a7ff',
-      '#748ffc',
-      '#5c7cfa',
-      '#4c6ef5',
-      '#4263eb',
-      '#3b5bdb',
-      '#364fc7',
-    ],
-  },
-  fontFamily: plusJakartaSans.style.fontFamily,
-  defaultRadius: 'md',
-  components: {
-    Button: {
-      defaultProps: {
-        fw: 600,
-        loaderProps: { type: 'dots' },
-      },
-      styles: {
-        root: { transition: 'transform 100ms ease' },
-      },
-    },
-    Card: {
-      defaultProps: {
-        padding: 'md',
-        radius: 'lg',
-        withBorder: true,
-      },
-      styles: {
-        root: {
-          backgroundColor: 'var(--mantine-color-body)',
-          boxShadow: 'var(--mantine-shadow-xs)',
-        },
-      },
-    },
-    Modal: {
-      defaultProps: {
-        radius: 'lg',
-        overlayProps: {
-          blur: 3,
-          opacity: 0.55,
-        },
-      },
-    },
-  },
-});
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={plusJakartaSans.variable} suppressHydrationWarning>
       <head>
         <ColorSchemeScript forceColorScheme="light" />
       </head>
       <body className={plusJakartaSans.className} suppressHydrationWarning>
-        <MantineProvider theme={theme} forceColorScheme="light">
-          <Notifications position="top-right" zIndex={1000} />
-          {children}
-        </MantineProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

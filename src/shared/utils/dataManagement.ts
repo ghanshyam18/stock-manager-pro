@@ -1,3 +1,5 @@
+import { notifications } from '@mantine/notifications';
+
 import { db, type InventoryItem } from '@/features/inventory/services/db';
 
 interface ExportData {
@@ -53,9 +55,19 @@ export const DataManagement = {
 
       // Cleanup
       setTimeout(() => URL.revokeObjectURL(url), 100);
+
+      notifications.show({
+        title: 'Success',
+        message: 'Data exported successfully',
+        color: 'blue',
+      });
     } catch (error) {
       console.error('Export failed:', error);
-      alert('Failed to export data');
+      notifications.show({
+        title: 'Export Failed',
+        message: 'There was an error generating your backup',
+        color: 'red',
+      });
     }
   },
 
@@ -96,11 +108,21 @@ export const DataManagement = {
         await new Promise((resolve) => setTimeout(resolve, 0));
       }
 
-      alert(`Successfully merged ${totalItems} items!`);
-      window.location.reload();
+      notifications.show({
+        title: 'Import Successful',
+        message: `Successfully merged ${totalItems} items!`,
+        color: 'teal',
+      });
+
+      // Reload after a short delay to let the notification show
+      setTimeout(() => window.location.reload(), 1500);
     } catch (error) {
       console.error('Import failed:', error);
-      alert('Failed to import: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      notifications.show({
+        title: 'Import Failed',
+        message: error instanceof Error ? error.message : 'Unknown error',
+        color: 'red',
+      });
     }
   },
 };

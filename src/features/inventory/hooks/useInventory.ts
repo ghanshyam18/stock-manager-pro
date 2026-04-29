@@ -115,7 +115,7 @@ export function useInventory() {
   }, [isLoadingMore, stats, filteredItems]);
 
   return {
-    allItems: !!filteredItems,
+    isLoading: filteredItems === undefined,
     filteredItems: filteredItems || [],
     designSuggestions,
     stats: stats || { totalQty: 0, totalValue: 0, uniqueDesigns: 0, totalCount: 0 },

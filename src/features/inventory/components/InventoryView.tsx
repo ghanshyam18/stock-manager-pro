@@ -1,22 +1,10 @@
 'use client';
 
-import {
-  Button,
-  Divider,
-  Drawer,
-  FileButton,
-  Group,
-  LoadingOverlay,
-  Progress,
-  Stack,
-  Text,
-  TextInput,
-} from '@mantine/core';
-import { useDisclosure, useMediaQuery } from '@mantine/hooks';
-import { Download, Upload } from 'lucide-react';
+import { LoadingOverlay, Progress, Stack, Text } from '@mantine/core';
+import { useMediaQuery } from '@mantine/hooks';
+import { modals } from '@mantine/modals';
 import { useState } from 'react';
 
-import { useOverlayHistory } from '@/shared/hooks/useOverlayHistory';
 import { DataManagement } from '@/shared/utils/dataManagement';
 
 import { useInventory } from '../hooks/useInventory';
@@ -26,26 +14,20 @@ import { InventoryHistoryList } from './InventoryHistoryList';
 import { InventorySearch } from './InventorySearch';
 import { InventoryListingSkeleton } from './InventorySkeleton';
 import { InventoryStats } from './InventoryStats';
-import { ItemDetailModal } from './ItemDetailModal';
 
 /**
  * InventoryView is the main container for the Inventory feature.
  */
 export function InventoryView() {
   const isMobile = useMediaQuery('(max-width: 768px)');
-  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
 
   // Data Management Progress State
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  // Modular Disclosures
-  const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false);
-  const [filterOpened, { open: openFilter, close: closeFilter }] = useDisclosure(false);
-
   // Centralized Logic Hook
   const {
-    allItems,
+    isLoading,
     filteredItems,
     designSuggestions,
     stats,
@@ -60,20 +42,36 @@ export function InventoryView() {
     isStale,
   } = useInventory();
 
-  // Back button handling
-  useOverlayHistory(modalOpened, closeModal, 'inventory-item-details');
-  useOverlayHistory(filterOpened, closeFilter, 'inventory-filters');
-
   // Event Handlers
-  const handleDelete = async (id?: number) => {
-    if (window.confirm('Are you sure you want to delete this item?')) {
-      await inventoryService.deleteItem(id);
-    }
+  const handleDelete = (id?: number) => {
+    modals.openConfirmModal({
+      title: <Text fw={800}>Delete Record</Text>,
+      children: (
+        <Text size="sm" fw={500}>
+          Are you sure you want to delete this inventory record? This action is permanent and cannot
+          be undone.
+        </Text>
+      ),
+      labels: { confirm: 'Delete', cancel: 'Keep it' },
+      confirmProps: { color: 'red', radius: 'xl' },
+      cancelProps: { variant: 'subtle', radius: 'xl' },
+      centered: true,
+      radius: 'lg',
+      onConfirm: async () => {
+        await inventoryService.deleteItem(id);
+      },
+    });
   };
 
   const handleSelectItem = (item: InventoryItem) => {
-    setSelectedItem(item);
-    openModal();
+    modals.openContextModal({
+      modal: 'item-details',
+      innerProps: { item, isMobile },
+      size: 'lg',
+      padding: 0,
+      fullScreen: isMobile,
+      withCloseButton: false,
+    });
   };
 
   const handleExport = async () => {
@@ -88,6 +86,31 @@ export function InventoryView() {
     setIsProcessing(true);
     setProgress(0);
     await DataManagement.importFromJSON(file, (p) => setProgress(p));
+    setIsProcessing(false);
+  };
+
+  const handleOpenFilters = () => {
+    modals.openContextModal({
+      modal: 'inventory-filters',
+      title: <Text fw={800}>Settings & Filters</Text>,
+      innerProps: {
+        dateFilter,
+        setDateFilter,
+        onExport: handleExport,
+        onImport: handleImport,
+      },
+      radius: '24px 24px 0 0',
+      transitionProps: { transition: 'slide-up', duration: 300 },
+      styles: {
+        content: {
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          borderRadius: '24px 24px 0 0',
+        },
+      },
+    });
   };
 
   return (
@@ -95,7 +118,6 @@ export function InventoryView() {
       gap="md"
       style={{ flexGrow: 1, height: '100%', position: 'relative', overflow: 'hidden' }}
     >
-      {/* Global Processing Overlay */}
       <LoadingOverlay
         visible={isProcessing}
         overlayProps={{ blur: 2 }}
@@ -112,7 +134,6 @@ export function InventoryView() {
         }}
       />
 
-      {/* Static Header Section */}
       <Stack gap="md">
         <div style={{ opacity: isStale ? 0.7 : 1, transition: 'opacity 200ms ease' }}>
           <InventorySearch
@@ -120,20 +141,18 @@ export function InventoryView() {
             onSearchChange={setSearch}
             designSuggestions={designSuggestions || []}
             isFilterActive={isFilterActive}
-            onFilterClick={openFilter}
+            onFilterClick={handleOpenFilters}
           />
         </div>
         <InventoryStats stats={stats} />
       </Stack>
-
-      {/* Scrollable List Section */}
       <div style={{ flexGrow: 1, position: 'relative', minHeight: 0 }}>
-        {!allItems ? (
+        {isLoading ? (
           <InventoryListingSkeleton />
         ) : (
           <InventoryHistoryList
             items={filteredItems}
-            isMobile={isMobile || false}
+            isMobile={isMobile}
             onDelete={handleDelete}
             onSelect={handleSelectItem}
             loadMore={loadMore}
@@ -143,102 +162,6 @@ export function InventoryView() {
           />
         )}
       </div>
-
-      {/* Date Filter & Settings Drawer */}
-      <Drawer
-        opened={filterOpened}
-        onClose={closeFilter}
-        title={<Text fw={800}>Settings & Filters</Text>}
-        position="bottom"
-        size="auto"
-        radius="24px 24px 0 0"
-        padding="xl"
-        data-testid="filter-drawer"
-      >
-        <Stack gap="md">
-          <Text size="sm" fw={700} c="dimmed" mb={-5}>
-            DATE RANGE
-          </Text>
-          <TextInput
-            label="From Date"
-            type="date"
-            size="md"
-            radius="md"
-            value={dateFilter.start}
-            onChange={(e) => setDateFilter({ ...dateFilter, start: e.currentTarget.value })}
-            data-testid="filter-start-date"
-          />
-          <TextInput
-            label="To Date"
-            type="date"
-            size="md"
-            radius="md"
-            value={dateFilter.end}
-            onChange={(e) => setDateFilter({ ...dateFilter, end: e.currentTarget.value })}
-            data-testid="filter-end-date"
-          />
-
-          <Group grow mt="xs">
-            <Button
-              variant="subtle"
-              radius="xl"
-              onClick={() => {
-                setDateFilter({ start: '', end: '' });
-                closeFilter();
-              }}
-              data-testid="reset-filters-button"
-            >
-              Reset
-            </Button>
-            <Button
-              radius="xl"
-              onClick={closeFilter}
-              color="blue"
-              data-testid="apply-filters-button"
-            >
-              Apply
-            </Button>
-          </Group>
-
-          <Divider my="sm" label="DATA MANAGEMENT" labelPosition="center" />
-
-          <Group grow>
-            <Button
-              variant="light"
-              color="blue"
-              leftSection={<Download size={18} />}
-              radius="xl"
-              onClick={handleExport}
-            >
-              Export JSON
-            </Button>
-            <FileButton onChange={handleImport} accept="application/json">
-              {(props) => (
-                <Button
-                  {...props}
-                  variant="light"
-                  color="teal"
-                  leftSection={<Upload size={18} />}
-                  radius="xl"
-                >
-                  Import JSON
-                </Button>
-              )}
-            </FileButton>
-          </Group>
-          <Text size="xs" c="dimmed" style={{ textAlign: 'center' }}>
-            Large datasets are processed in chunks for stability.
-          </Text>
-        </Stack>
-      </Drawer>
-
-      {/* Shared Detail Modal */}
-      <ItemDetailModal
-        item={selectedItem}
-        opened={modalOpened}
-        onClose={closeModal}
-        isMobile={isMobile || false}
-      />
     </Stack>
   );
 }

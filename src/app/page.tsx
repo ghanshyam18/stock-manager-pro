@@ -5,6 +5,7 @@ import { Box, Container, Group, Paper, Text, Title, Transition } from '@mantine/
 import { AddStockForm } from '@/features/inventory/components/AddStockForm';
 import { InventoryView } from '@/features/inventory/components/InventoryView';
 import { BottomNavigation } from '@/shared/components/BottomNavigation';
+import { useNativeBack } from '@/shared/hooks/useNativeBack';
 import { usePreventExit } from '@/shared/hooks/usePreventExit';
 import { useUIStore } from '@/shared/store/useUIStore';
 
@@ -18,6 +19,10 @@ export default function Home() {
 
   // Prevent accidental exit
   usePreventExit(true);
+
+  // Native back button tab navigation
+  // If user is on 'add' tab, back button takes them to 'inventory'
+  useNativeBack(activeTab === 'add', () => setActiveTab('inventory'), 'tab-navigation');
 
   return (
     <Box
@@ -34,7 +39,7 @@ export default function Home() {
           padding: '12px 16px',
           backgroundColor: 'white',
           borderBottom: '1px solid var(--mantine-color-gray-2)',
-          zIndex: 200,
+          zIndex: 100,
         }}
       >
         <Container size="sm">

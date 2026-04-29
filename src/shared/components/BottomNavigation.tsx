@@ -30,7 +30,7 @@ export function BottomNavigation() {
         bottom: 0,
         left: 0,
         right: 0,
-        zIndex: 300,
+        zIndex: 100,
         borderRadius: '28px 28px 0 0',
         borderTop: '1px solid rgba(0, 0, 0, 0.05)',
         backgroundColor: '#ffffff', // Use solid hex to prevent transparency gaps
