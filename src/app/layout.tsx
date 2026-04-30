@@ -4,14 +4,14 @@ import './globals.css';
 
 import { ColorSchemeScript } from '@mantine/core';
 import type { Metadata, Viewport } from 'next';
-import { Plus_Jakarta_Sans } from 'next/font/google';
+import { Inter } from 'next/font/google';
 
 import { Providers } from './Providers';
 
-const plusJakartaSans = Plus_Jakarta_Sans({
+const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-jakarta',
+  variable: '--font-inter',
 });
 
 export const metadata: Metadata = {
@@ -43,11 +43,11 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={plusJakartaSans.variable} suppressHydrationWarning>
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
       <head>
         <ColorSchemeScript forceColorScheme="light" />
       </head>
-      <body className={plusJakartaSans.className} suppressHydrationWarning>
+      <body className={inter.className} suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
     </html>

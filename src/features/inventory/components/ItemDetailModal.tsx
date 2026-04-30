@@ -15,10 +15,7 @@ import {
 import { ContextModalProps } from '@mantine/modals';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Calendar, X } from 'lucide-react';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-
-// Safe isomorphic layout effect
-const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
+import { useEffect, useRef } from 'react';
 
 import { SafeImage } from '@/shared/components/SafeImage';
 import { useNativeBack } from '@/shared/hooks/useNativeBack';
