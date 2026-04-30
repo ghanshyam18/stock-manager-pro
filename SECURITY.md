@@ -6,18 +6,19 @@ We take the security of Stock Management App seriously. If you believe you have 
 
 **Please do not open a public GitHub issue for security vulnerabilities.**
 
-Instead, please send an email to the maintainers (or use GitHub's private vulnerability reporting if enabled).
+Instead, please report vulnerabilities via **GitHub's Private Vulnerability Reporting** feature in this repository. Alternatively, if you cannot use that feature, please contact the repository maintainers directly.
 
 ### What to include in your report:
 
-- A description of the vulnerability.
-- Steps to reproduce the issue.
-- Potential impact of the vulnerability.
+- A clear and descriptive title for the vulnerability.
+- A detailed description of the vulnerability and its potential impact.
+- Step-by-step instructions to reproduce the issue.
 - Any suggested fixes or mitigations.
+- Relevant screenshots or logs (if applicable).
 
 ## Response Time
 
-We will acknowledge receipt of your report within 48 hours and provide a timeline for addressing the issue.
+We will acknowledge receipt of your report within 48 hours and provide a timeline for addressing the issue. We appreciate your patience and help in keeping the project secure.
 
 ## Disclosure
 
