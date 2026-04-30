@@ -2,17 +2,30 @@ import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
 import './globals.css';
 
-import { ColorSchemeScript, createTheme, MantineProvider } from '@mantine/core';
-import { Notifications } from '@mantine/notifications';
+import { ColorSchemeScript } from '@mantine/core';
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 
-const inter = Inter({ subsets: ['latin'] });
+import { Providers } from './Providers';
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+});
 
 export const metadata: Metadata = {
   title: 'Stockly | Inventory Management',
   description: 'Fast, offline-first stock management for clothing inventory',
   manifest: '/manifest.json',
+  icons: {
+    icon: [
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -28,37 +41,14 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
-const theme = createTheme({
-  primaryColor: 'blue',
-  fontFamily: inter.style.fontFamily,
-  defaultRadius: 'md',
-  components: {
-    Button: {
-      defaultProps: {
-        fw: 500,
-      },
-    },
-    Card: {
-      defaultProps: {
-        padding: 'md',
-        radius: 'lg',
-        withBorder: true,
-      },
-    },
-  },
-});
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
       <head>
         <ColorSchemeScript forceColorScheme="light" />
       </head>
-      <body className={inter.className}>
-        <MantineProvider theme={theme} forceColorScheme="light">
-          <Notifications position="top-right" zIndex={1000} />
-          {children}
-        </MantineProvider>
+      <body className={inter.className} suppressHydrationWarning>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
