@@ -1,55 +1,33 @@
 import { notifications } from '@mantine/notifications';
 
-import { db, type InventoryItem } from '@/features/inventory/services/db';
-
-interface ExportData {
-  version: number;
-  timestamp: string;
-  data: InventoryItem[];
-}
+import { db } from '@/features/inventory/services/db';
 
 /**
  * DataManagement - SaaS-Grade Data Portability.
- * Updated: High-Efficiency Export that handles massive datasets
- * without crashing browser memory.
+ * High-Efficiency Export/Import using the dexie-export-import standard.
  */
 export const DataManagement = {
   /**
-   * Exports the entire inventory using a memory-efficient strategy.
-   * Standard: Pulls data in one pass for small-mid datasets,
-   * but uses Blob to keep the browser's main thread responsive.
+   * Exports the entire database including images (Blobs) as a binary-safe JSON.
    */
   async exportToJSON(onProgress?: (percent: number) => void) {
     try {
-      // 1. Get total count for progress tracking
-      const totalCount = await db.inventory.count();
-      const allItems: InventoryItem[] = [];
-      const CHUNK_SIZE = 1000;
+      // Dynamic import to ensure compatibility with Next.js static export
+      const { exportDB } = await import('dexie-export-import');
 
-      // 2. Fetch data in chunks to avoid memory spikes
-      for (let i = 0; i < totalCount; i += CHUNK_SIZE) {
-        const chunk = await db.inventory.offset(i).limit(CHUNK_SIZE).toArray();
-        allItems.push(...chunk);
+      const blob = await exportDB(db, {
+        progressCallback: ({ totalRows, completedRows }) => {
+          if (onProgress && totalRows) {
+            onProgress(Math.round((completedRows / totalRows) * 100));
+          }
+          return true;
+        },
+      });
 
-        if (onProgress) {
-          onProgress(Math.round(((i + chunk.length) / totalCount) * 100));
-        }
-      }
-
-      const exportData: ExportData = {
-        version: 2,
-        timestamp: new Date().toISOString(),
-        data: allItems,
-      };
-
-      // 3. Create Blob for memory-safe download
-      const jsonString = JSON.stringify(exportData);
-      const blob = new Blob([jsonString], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
-
       const link = document.createElement('a');
       link.href = url;
-      link.download = `inventory-export-${new Date().toISOString().split('T')[0]}.json`;
+      link.download = `stockly-backup-${new Date().toISOString().split('T')[0]}.json`;
 
       link.click();
 
@@ -57,8 +35,8 @@ export const DataManagement = {
       setTimeout(() => URL.revokeObjectURL(url), 100);
 
       notifications.show({
-        title: 'Success',
-        message: 'Data exported successfully',
+        title: 'Export Success',
+        message: 'Your backup file has been generated.',
         color: 'blue',
       });
     } catch (error) {
@@ -72,55 +50,38 @@ export const DataManagement = {
   },
 
   /**
-   * Imports data using Chunked Transactions.
+   * Restores the database from a professional backup file.
+   * This uses the official importInto strategy for existing database instances.
    */
   async importFromJSON(file: File, onProgress?: (percent: number) => void) {
     try {
-      const text = await file.text();
-      const importData = JSON.parse(text);
+      const { importInto } = await import('dexie-export-import');
 
-      if (!importData.data || !Array.isArray(importData.data)) {
-        throw new Error('Invalid data format');
-      }
-
-      const items = importData.data as InventoryItem[];
-      const totalItems = items.length;
-      const CHUNK_SIZE = 100;
-
-      for (let i = 0; i < totalItems; i += CHUNK_SIZE) {
-        const chunk = items.slice(i, i + CHUNK_SIZE);
-
-        const normalizedChunk = chunk.map((item) => ({
-          ...item,
-          id: typeof item.id === 'string' ? undefined : item.id,
-          updatedAt: item.updatedAt || Date.now(),
-        }));
-
-        await db.transaction('rw', db.inventory, async () => {
-          await db.inventory.bulkPut(normalizedChunk);
-        });
-
-        if (onProgress) {
-          const percent = Math.min(100, Math.round(((i + chunk.length) / totalItems) * 100));
-          onProgress(percent);
-        }
-
-        await new Promise((resolve) => setTimeout(resolve, 0));
-      }
+      // Use a full-overwrite strategy for a clean restore
+      await importInto(db, file, {
+        clearTablesBeforeImport: true,
+        overwriteValues: true,
+        progressCallback: ({ totalRows, completedRows }) => {
+          if (onProgress && totalRows) {
+            onProgress(Math.round((completedRows / totalRows) * 100));
+          }
+          return true;
+        },
+      });
 
       notifications.show({
-        title: 'Import Successful',
-        message: `Successfully merged ${totalItems} items!`,
+        title: 'Restore Successful',
+        message: 'Database has been fully restored!',
         color: 'teal',
       });
 
-      // Reload after a short delay to let the notification show
+      // Reload to ensure all UI components and hooks reflect the new state
       setTimeout(() => window.location.reload(), 1500);
     } catch (error) {
       console.error('Import failed:', error);
       notifications.show({
-        title: 'Import Failed',
-        message: error instanceof Error ? error.message : 'Unknown error',
+        title: 'Restore Failed',
+        message: 'The file provided is not a valid Stockly backup.',
         color: 'red',
       });
     }
