@@ -12,7 +12,7 @@ A professional, mobile-first, offline-first stock management web application bui
 - **🌐 Offline-First**: Uses IndexedDB (via Dexie.js) to store all data locally, ensuring full functionality without internet.
 - **🚀 High Performance**: Implements single-stream virtualization (`@tanstack/react-virtual`) to handle thousands of inventory items smoothly.
 - **⚡ Static Export**: Built as a high-performance static site (Next.js `output: export`).
-- **💾 Data Management**: Robust import/export capabilities (JSON/CSV) with chunked processing for large datasets.
+- **💾 Data Management**: Professional backup and restore system with binary-safe handling for image Blobs and large datasets.
 - **🛠️ Professional Tooling**: Equipped with ESLint, Prettier, Husky, and Commitlint for a consistent developer experience.
 
 ## 🚀 Getting Started
