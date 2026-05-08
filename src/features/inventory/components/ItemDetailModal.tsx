@@ -12,9 +12,9 @@ import {
   Text,
   Title,
 } from '@mantine/core';
-import { ContextModalProps } from '@mantine/modals';
+import { ContextModalProps, modals } from '@mantine/modals';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { Calendar, X } from 'lucide-react';
+import { Calendar, Trash2, X } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 
 import { SafeImage } from '@/shared/components/SafeImage';
@@ -22,7 +22,8 @@ import { useNativeBack } from '@/shared/hooks/useNativeBack';
 import { formatDate, formatTime } from '@/shared/utils/date';
 
 import { useItemDetails } from '../hooks/useItemDetails';
-import { type InventoryItem } from '../services/db';
+import { type DesignItem, type InventoryItem } from '../services/db';
+import { inventoryService } from '../services/inventoryService';
 
 /**
  * ItemDetailModal shows the complete history and details for a specific design.
@@ -32,10 +33,31 @@ export function ItemDetailModal({
   context,
   id,
   innerProps,
-}: ContextModalProps<{ item: InventoryItem; isMobile: boolean }>) {
+}: ContextModalProps<{ item: DesignItem; isMobile: boolean }>) {
   const { item, isMobile } = innerProps;
-  const { history, totalStock, entriesCount, loadMore, hasMore, isLoadingMore } =
+  const { history, totalStock, totalValue, entriesCount, loadMore, hasMore, isLoadingMore } =
     useItemDetails(item);
+
+  const handleDelete = (recordId?: number) => {
+    if (!recordId) return;
+    modals.openConfirmModal({
+      title: <Text fw={800}>Delete Record</Text>,
+      children: (
+        <Text size="sm" fw={500}>
+          Are you sure you want to delete this inventory record? This action is permanent and cannot
+          be undone.
+        </Text>
+      ),
+      labels: { confirm: 'Delete', cancel: 'Keep it' },
+      confirmProps: { color: 'red', radius: 'xl' },
+      cancelProps: { variant: 'subtle', radius: 'xl' },
+      centered: true,
+      radius: 'lg',
+      onConfirm: async () => {
+        await inventoryService.deleteItem(recordId);
+      },
+    });
+  };
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -62,6 +84,16 @@ export function ItemDetailModal({
       }
     }
   }, [virtualItems, history.length, hasMore, loadMore, isLoadingMore]);
+
+  // Automatically close modal if the design is deleted (history empty and no entries)
+  useEffect(() => {
+    if (history !== undefined && history.length === 0 && !isLoadingMore) {
+      const timer = setTimeout(() => {
+        context.closeModal(id);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [history, isLoadingMore, context, id]);
 
   if (!item) return null;
 
@@ -133,6 +165,7 @@ export function ItemDetailModal({
                         item={item}
                         entriesCount={entriesCount}
                         totalStock={totalStock}
+                        totalValue={totalValue}
                       />
                       <Group justify="space-between" px="xs">
                         <Title order={4} fw={800}>
@@ -146,7 +179,7 @@ export function ItemDetailModal({
                   </Box>
                 ) : entry ? (
                   <Box px="md" py={2}>
-                    <HistoryRecordCard entry={entry} />
+                    <HistoryRecordCard entry={entry} onDelete={handleDelete} />
                   </Box>
                 ) : null}
               </div>
@@ -172,7 +205,13 @@ export function ItemDetailModal({
   );
 }
 
-function HistoryRecordCard({ entry }: { entry: InventoryItem }) {
+function HistoryRecordCard({
+  entry,
+  onDelete,
+}: {
+  entry: InventoryItem;
+  onDelete?: (id?: number) => void;
+}) {
   return (
     <Paper
       p="sm"
@@ -200,14 +239,31 @@ function HistoryRecordCard({ entry }: { entry: InventoryItem }) {
             </Text>
           </Stack>
         </Group>
-        <Stack align="flex-end" gap={2}>
-          <Badge size="md" radius="sm" color="blue" variant="light" fw={900}>
-            +{entry.quantity}
-          </Badge>
-          <Text size="xs" fw={800} color="green.8">
-            ₹{entry.price}
-          </Text>
-        </Stack>
+        <Group gap="sm" align="center">
+          <Stack align="flex-end" gap={2}>
+            <Badge size="md" radius="sm" color="blue" variant="light" fw={900}>
+              +{entry.quantity}
+            </Badge>
+            <Text size="xs" fw={800} color="green.8">
+              ₹{entry.price}
+            </Text>
+          </Stack>
+          {onDelete && (
+            <ActionIcon
+              variant="subtle"
+              color="red"
+              radius="xl"
+              size="md"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(entry.id);
+              }}
+              data-testid="delete-history-item-button"
+            >
+              <Trash2 size={16} />
+            </ActionIcon>
+          )}
+        </Group>
       </Group>
     </Paper>
   );
@@ -251,10 +307,12 @@ function ItemHeroSection({
   item,
   entriesCount,
   totalStock,
+  totalValue,
 }: {
-  item: InventoryItem;
+  item: DesignItem;
   entriesCount: number;
   totalStock: number;
+  totalValue: number;
 }) {
   return (
     <Paper
@@ -280,15 +338,16 @@ function ItemHeroSection({
                 {item.designNo}
               </Title>
             </Box>
-            <Badge variant="light" color="green" size="lg" radius="md">
-              IN STOCK
+            <Badge variant="light" color={totalStock > 0 ? 'green' : 'red'} size="lg" radius="md">
+              {totalStock > 0 ? 'IN STOCK' : 'OUT OF STOCK'}
             </Badge>
           </Group>
         </Stack>
 
-        <Group grow gap="md">
+        <Group grow gap="md" wrap="wrap">
           <StatBox label="Entries" value={entriesCount} color="gray" icon="list" />
-          <StatBox label="Balance" value={totalStock} color="blue" icon="stock" />
+          <StatBox label="Balance" value={`${totalStock} Pcs`} color="blue" icon="stock" />
+          <StatBox label="Valuation" value={`₹${totalValue}`} color="green" icon="price" />
         </Group>
       </Stack>
     </Paper>
@@ -301,25 +360,66 @@ function StatBox({
   color,
 }: {
   label: string;
-  value: number;
-  color: string;
+  value: number | string;
+  color: 'gray' | 'blue' | 'green';
   icon: string;
 }) {
-  const isGray = color === 'gray';
+  const getColors = () => {
+    switch (color) {
+      case 'green':
+        return {
+          bg: 'var(--mantine-color-teal-0)',
+          border: 'var(--mantine-color-teal-1)',
+          text: 'teal.7',
+          valColor: 'teal.9',
+        };
+      case 'blue':
+        return {
+          bg: 'var(--mantine-color-blue-0)',
+          border: 'var(--mantine-color-blue-1)',
+          text: 'blue.7',
+          valColor: 'blue.9',
+        };
+      case 'gray':
+      default:
+        return {
+          bg: 'var(--mantine-color-gray-0)',
+          border: 'var(--mantine-color-gray-1)',
+          text: 'dimmed',
+          valColor: 'dark.4',
+        };
+    }
+  };
+
+  const colors = getColors();
+
   return (
     <Box
       p="md"
       style={{
-        backgroundColor: isGray ? 'var(--mantine-color-gray-0)' : 'var(--mantine-color-blue-0)',
+        backgroundColor: colors.bg,
         borderRadius: '20px',
-        border: `1px solid ${isGray ? 'var(--mantine-color-gray-1)' : 'var(--mantine-color-blue-1)'}`,
+        border: `1px solid ${colors.border}`,
+        flexMinWidth: '100px',
       }}
       data-testid={`stat-box-${label.toLowerCase().replace(' ', '-')}`}
     >
-      <Text size="xs" c={isGray ? 'dimmed' : 'blue.7'} tt="uppercase" fw={800} lts={1} mb={4}>
+      <Text
+        size="xs"
+        c={colors.text as 'dimmed' | 'blue.7' | 'teal.7'}
+        tt="uppercase"
+        fw={800}
+        lts={1}
+        mb={4}
+      >
         {label}
       </Text>
-      <Text fw={900} size="24px" c={isGray ? 'dark.4' : 'blue.9'}>
+      <Text
+        fw={900}
+        size="20px"
+        c={colors.valColor}
+        style={{ whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}
+      >
         {value}
       </Text>
     </Box>

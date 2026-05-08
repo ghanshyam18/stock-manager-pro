@@ -1,6 +1,16 @@
 'use client';
 
-import { Autocomplete, Box, Button, FileInput, NumberInput, Stack, TextInput } from '@mantine/core';
+import {
+  Autocomplete,
+  Box,
+  Button,
+  FileInput,
+  NumberInput,
+  Stack,
+  Switch,
+  Text,
+  TextInput,
+} from '@mantine/core';
 import { Save, Upload, X } from 'lucide-react';
 
 import { SafeImage } from '@/shared/components/SafeImage';
@@ -13,7 +23,7 @@ interface AddStockFormProps {
 
 /**
  * AddStockForm handles the input of new inventory items.
- * It uses the useAddStock hook for logic and image processing.
+ * It uses the useAddStock hook for logic, image processing, and conditional UX.
  */
 export function AddStockForm({ onClear }: AddStockFormProps) {
   const {
@@ -21,14 +31,20 @@ export function AddStockForm({ onClear }: AddStockFormProps) {
     loading,
     designOptions,
     imagePreview,
+    isNewDesign,
+    existingDesign,
+    updateImageToggle,
+    setUpdateImageToggle,
     handleImageUpload,
     clearImage,
     handleSubmit,
   } = useAddStock(onClear);
 
+  const showUpload = !existingDesign || updateImageToggle;
+
   return (
     <form onSubmit={form.onSubmit(handleSubmit)} data-testid="add-stock-form">
-      <Stack p="md">
+      <Stack p="md" gap="md">
         <Autocomplete
           label="Design No"
           placeholder="e.g. D-101"
@@ -38,18 +54,63 @@ export function AddStockForm({ onClear }: AddStockFormProps) {
           data-testid="input-design-no"
         />
 
-        <FileInput
-          label="Item Photo"
-          placeholder="Upload image"
-          leftSection={<Upload size={16} />}
-          accept="image/*"
-          required
-          onChange={handleImageUpload}
-          error={form.errors.image}
-          data-testid="input-image"
-        />
+        {existingDesign && (
+          <Stack
+            gap="xs"
+            p="sm"
+            style={{
+              border: '1px solid var(--mantine-color-gray-2)',
+              borderRadius: '16px',
+              backgroundColor: 'var(--mantine-color-gray-0)',
+            }}
+          >
+            <Text size="xs" fw={800} c="dimmed" tt="uppercase" lts={1}>
+              Existing Design Image
+            </Text>
+            {existingDesign.image ? (
+              <Box
+                style={{ position: 'relative', width: '100%', height: 160 }}
+                data-testid="existing-image-container"
+              >
+                <SafeImage
+                  src={existingDesign.image}
+                  alt="Existing"
+                  fit="contain"
+                  h={160}
+                  radius="md"
+                />
+              </Box>
+            ) : (
+              <Text size="sm" c="dimmed" fs="italic">
+                No image uploaded for this design yet.
+              </Text>
+            )}
+            <Switch
+              label="Update primary image for this design"
+              checked={updateImageToggle}
+              onChange={(event) => setUpdateImageToggle(event.currentTarget.checked)}
+              data-testid="toggle-update-image"
+              fw={600}
+              size="sm"
+              mt="xs"
+            />
+          </Stack>
+        )}
 
-        {imagePreview && (
+        {showUpload && (
+          <FileInput
+            label={existingDesign ? 'New Primary Image' : 'Item Photo'}
+            placeholder="Upload image"
+            leftSection={<Upload size={16} />}
+            accept="image/*"
+            required={isNewDesign || !existingDesign}
+            onChange={handleImageUpload}
+            error={form.errors.image}
+            data-testid="input-image"
+          />
+        )}
+
+        {imagePreview && showUpload && (
           <Box
             style={{ position: 'relative', width: '100%', height: 200 }}
             data-testid="image-preview-container"

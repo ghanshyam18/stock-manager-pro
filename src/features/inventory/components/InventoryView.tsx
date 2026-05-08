@@ -8,8 +8,7 @@ import { useState } from 'react';
 import { DataManagement } from '@/shared/utils/dataManagement';
 
 import { useInventory } from '../hooks/useInventory';
-import { type InventoryItem } from '../services/db';
-import { inventoryService } from '../services/inventoryService';
+import { type DesignItem } from '../services/db';
 import { InventoryHistoryList } from './InventoryHistoryList';
 import { InventorySearch } from './InventorySearch';
 import { InventoryListingSkeleton } from './InventorySkeleton';
@@ -43,27 +42,7 @@ export function InventoryView() {
   } = useInventory();
 
   // Event Handlers
-  const handleDelete = (id?: number) => {
-    modals.openConfirmModal({
-      title: <Text fw={800}>Delete Record</Text>,
-      children: (
-        <Text size="sm" fw={500}>
-          Are you sure you want to delete this inventory record? This action is permanent and cannot
-          be undone.
-        </Text>
-      ),
-      labels: { confirm: 'Delete', cancel: 'Keep it' },
-      confirmProps: { color: 'red', radius: 'xl' },
-      cancelProps: { variant: 'subtle', radius: 'xl' },
-      centered: true,
-      radius: 'lg',
-      onConfirm: async () => {
-        await inventoryService.deleteItem(id);
-      },
-    });
-  };
-
-  const handleSelectItem = (item: InventoryItem) => {
+  const handleSelectItem = (item: DesignItem) => {
     modals.openContextModal({
       modal: 'item-details',
       innerProps: { item, isMobile },
@@ -153,7 +132,6 @@ export function InventoryView() {
           <InventoryHistoryList
             items={filteredItems}
             isMobile={isMobile}
-            onDelete={handleDelete}
             onSelect={handleSelectItem}
             loadMore={loadMore}
             hasMore={hasMore}

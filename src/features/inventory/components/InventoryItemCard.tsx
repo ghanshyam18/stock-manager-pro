@@ -1,89 +1,88 @@
-import { ActionIcon, Badge, Card, Group, Stack, Text, Title } from '@mantine/core';
-import { Calendar, Trash2 } from 'lucide-react';
+import { ActionIcon, Card, Group, Stack, Text, Title } from '@mantine/core';
+import { ChevronRight, Package } from 'lucide-react';
 import { memo } from 'react';
 
 import { SafeImage } from '@/shared/components/SafeImage';
-import { formatDate } from '@/shared/utils/date';
 
-import { type InventoryItem } from '../services/db';
+import { type DesignItem } from '../services/db';
 
 interface InventoryItemCardProps {
-  item: InventoryItem;
-  onDelete: (id?: number) => void;
-  onSelect: (item: InventoryItem) => void;
+  item: DesignItem;
+  onSelect: (item: DesignItem) => void;
 }
 
-export const InventoryItemCard = memo(({ item, onDelete, onSelect }: InventoryItemCardProps) => {
+export const InventoryItemCard = memo(({ item, onSelect }: InventoryItemCardProps) => {
   return (
     <Card
-      padding="xs"
-      radius="xl"
+      padding="sm"
+      radius="lg"
       withBorder
-      shadow="sm"
       style={{
         backgroundColor: 'var(--mantine-color-white)',
-        height: '100%',
-        transition: 'transform 200ms ease, box-shadow 200ms ease',
+        borderColor: 'var(--mantine-color-gray-2)',
+        boxShadow: 'var(--mantine-shadow-xs)',
+        transition: 'transform 150ms ease, box-shadow 150ms ease',
         cursor: 'pointer',
       }}
       onClick={() => onSelect(item)}
       data-testid={`inventory-item-${item.designNo}`}
     >
-      <Group wrap="nowrap" gap="sm" align="center" style={{ height: '100%' }}>
-        <SafeImage
-          src={item.image}
-          w={100}
-          h={100}
-          radius="lg"
-          alt={item.designNo}
-          style={{ objectFit: 'cover' }}
-          data-testid="item-image"
-        />
-        <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
-          <Group justify="space-between" wrap="nowrap">
-            <Title
-              order={3}
-              size="h5"
-              fw={900}
-              style={{
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                letterSpacing: '-0.3px',
-              }}
-              data-testid="item-title"
-            >
-              {item.designNo}
-            </Title>
-            <ActionIcon
-              variant="subtle"
-              color="red"
-              radius="xl"
-              size="md"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(item.id);
-              }}
-              data-testid="delete-item-button"
-            >
-              <Trash2 size={16} />
-            </ActionIcon>
-          </Group>
-          <Group gap={4}>
-            <Calendar size={12} color="var(--mantine-color-gray-5)" />
-            <Text size="xs" c="dimmed" fw={600}>
-              {formatDate(item.date)}
+      <Group wrap="nowrap" gap="md" align="center" style={{ height: '100%' }}>
+        {/* Aspect Ratio Safe Image Frame */}
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          <SafeImage
+            src={item.image}
+            w={80}
+            h={80}
+            radius="md"
+            alt={item.designNo}
+            style={{
+              objectFit: 'cover',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+            }}
+            data-testid="item-image"
+          />
+        </div>
+
+        {/* Content Section */}
+        <Stack gap={6} style={{ flex: 1, minWidth: 0 }}>
+          <Title
+            order={3}
+            size="h5"
+            fw={900}
+            style={{
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              letterSpacing: '-0.3px',
+              color: 'var(--mantine-color-gray-9)',
+            }}
+            data-testid="item-title"
+          >
+            {item.designNo}
+          </Title>
+
+          {/* Minimalist parameters without any text labels */}
+          <Group gap="md" wrap="nowrap" align="center">
+            {/* Quantity representation: Icon + Value */}
+            <Group gap={4} wrap="nowrap" style={{ color: 'var(--mantine-color-blue-6)' }}>
+              <Package size={14} strokeWidth={2.5} />
+              <Text size="sm" fw={800}>
+                {item.totalQuantity}
+              </Text>
+            </Group>
+
+            {/* Total Value representation: Currency + Value */}
+            <Text size="sm" fw={800} c="teal.7">
+              ₹{item.totalValue.toLocaleString()}
             </Text>
           </Group>
-          <Group gap="xs" mt={6}>
-            <Badge size="sm" variant="light" color="blue" radius="md" fw={800}>
-              {item.quantity} Pcs
-            </Badge>
-            <Badge size="sm" variant="light" color="teal" radius="md" fw={800}>
-              ₹{item.price}
-            </Badge>
-          </Group>
         </Stack>
+
+        {/* Click indicator arrow */}
+        <ActionIcon variant="subtle" color="gray" radius="xl" size="md" style={{ flexShrink: 0 }}>
+          <ChevronRight size={16} strokeWidth={3} />
+        </ActionIcon>
       </Group>
     </Card>
   );

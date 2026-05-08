@@ -49,4 +49,27 @@ export const inventoryService = {
       return false;
     }
   },
+
+  async updateDesignImage(designNo: string, image: Blob | string) {
+    try {
+      await db.designs.update(designNo, {
+        image,
+        updatedAt: Date.now(),
+      });
+      notifications.show({
+        title: 'Success',
+        message: 'Design image updated successfully',
+        color: 'teal',
+      });
+      return true;
+    } catch (error) {
+      console.error('Failed to update design image:', error);
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to update design image',
+        color: 'red',
+      });
+      return false;
+    }
+  },
 };
