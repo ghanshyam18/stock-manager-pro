@@ -14,7 +14,7 @@ import {
 } from '@mantine/core';
 import { ContextModalProps, modals } from '@mantine/modals';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { Calendar, Trash2, X } from 'lucide-react';
+import { Trash2, X } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 
 import { SafeImage } from '@/shared/components/SafeImage';
@@ -153,17 +153,36 @@ export function ItemDetailModal({
               >
                 {isHero ? (
                   <Box>
-                    <SafeImage
-                      src={item.image}
-                      alt={item.designNo}
-                      w="100%"
-                      h={isMobile ? 320 : 450}
-                      style={{ objectFit: 'cover' }}
-                    />
+                    <Box
+                      style={{ position: 'relative', width: '100%', height: isMobile ? 320 : 450 }}
+                    >
+                      <SafeImage
+                        src={item.image}
+                        alt={item.designNo}
+                        w="100%"
+                        h="100%"
+                        style={{ objectFit: 'cover' }}
+                      />
+                      <Badge
+                        variant="filled"
+                        color={totalStock > 0 ? 'teal' : 'red'}
+                        size="md"
+                        radius="md"
+                        style={{
+                          position: 'absolute',
+                          top: '16px',
+                          right: '16px',
+                          zIndex: 11,
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                          fontWeight: 800,
+                        }}
+                      >
+                        {totalStock > 0 ? 'IN STOCK' : 'OUT OF STOCK'}
+                      </Badge>
+                    </Box>
                     <Stack p="md" gap="md" mt="-32px" style={{ position: 'relative', zIndex: 10 }}>
                       <ItemHeroSection
                         item={item}
-                        entriesCount={entriesCount}
                         totalStock={totalStock}
                         totalValue={totalValue}
                       />
@@ -212,42 +231,63 @@ function HistoryRecordCard({
   entry: InventoryItem;
   onDelete?: (id?: number) => void;
 }) {
+  const totalValue = entry.quantity * entry.price;
+
   return (
     <Paper
       p="sm"
       radius="lg"
       withBorder
       shadow="xs"
-      style={{ backgroundColor: 'var(--mantine-color-white)' }}
+      style={{
+        backgroundColor: 'var(--mantine-color-white)',
+        borderColor: 'var(--mantine-color-gray-1)',
+      }}
       data-testid="history-record-card"
     >
       <Group justify="space-between" wrap="nowrap">
-        <Group gap="sm">
-          <Center
-            w={36}
-            h={36}
-            style={{ backgroundColor: 'var(--mantine-color-gray-0)', borderRadius: '10px' }}
+        {/* Left Side: Direct Date & Time Stamps */}
+        <Stack gap={1} style={{ minWidth: 0, flex: 1 }}>
+          <Text
+            size="sm"
+            fw={800}
+            style={{
+              color: 'var(--mantine-color-gray-9)',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
           >
-            <Calendar size={18} color="var(--mantine-color-gray-6)" />
-          </Center>
-          <Stack gap={0}>
-            <Text size="sm" fw={800}>
-              {formatDate(entry.date)}
-            </Text>
-            <Text size="xs" color="dimmed" fw={500}>
-              {formatTime(entry.createdAt)}
-            </Text>
-          </Stack>
-        </Group>
-        <Group gap="sm" align="center">
-          <Stack align="flex-end" gap={2}>
+            {formatDate(entry.date)}
+          </Text>
+          <Text size="xs" color="dimmed" fw={500}>
+            {formatTime(entry.createdAt)}
+          </Text>
+        </Stack>
+
+        {/* Right Side: Quantity and Price details matching theme */}
+        <Group gap="sm" align="center" style={{ flexShrink: 0 }}>
+          <Stack align="flex-end" gap={1}>
+            {/* Quantity in theme blue badge */}
             <Badge size="md" radius="sm" color="blue" variant="light" fw={900}>
-              +{entry.quantity}
+              +{entry.quantity} Pcs
             </Badge>
-            <Text size="xs" fw={800} color="green.8">
-              ₹{entry.price}
+
+            {/* Total financial value of this entry in standard text color */}
+            <Text
+              size="sm"
+              fw={800}
+              style={{ color: 'var(--mantine-color-gray-9)', lineHeight: 1.2 }}
+            >
+              ₹{totalValue.toLocaleString()}
+            </Text>
+
+            {/* Unit rate subscript */}
+            <Text size="xs" color="dimmed" fw={600} style={{ fontSize: '10px' }}>
+              rate: ₹{entry.price} / Pc
             </Text>
           </Stack>
+
           {onDelete && (
             <ActionIcon
               variant="subtle"
@@ -259,6 +299,7 @@ function HistoryRecordCard({
                 onDelete(entry.id);
               }}
               data-testid="delete-history-item-button"
+              style={{ flexShrink: 0 }}
             >
               <Trash2 size={16} />
             </ActionIcon>
@@ -305,123 +346,85 @@ function ModalHeader({ onClose }: { onClose: () => void }) {
 
 function ItemHeroSection({
   item,
-  entriesCount,
   totalStock,
   totalValue,
 }: {
   item: DesignItem;
-  entriesCount: number;
   totalStock: number;
   totalValue: number;
 }) {
   return (
     <Paper
-      p="xl"
-      radius="32px"
-      shadow="xl"
+      p="md"
+      radius="20px"
       withBorder
       style={{
-        borderTop: 'none',
         backgroundColor: 'var(--mantine-color-white)',
-        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02)',
+        borderColor: 'var(--mantine-color-gray-2)',
+        boxShadow: 'var(--mantine-shadow-md)',
       }}
       data-testid="item-hero-section"
     >
-      <Stack gap="xl">
-        <Stack gap={4}>
-          <Group justify="space-between" align="flex-start">
-            <Box>
-              <Text size="xs" fw={800} c="blue.6" lts={1} tt="uppercase" mb={4}>
-                Design Identity
-              </Text>
-              <Title order={1} fw={900} style={{ fontSize: '32px', letterSpacing: '-1px' }}>
-                {item.designNo}
-              </Title>
-            </Box>
-            <Badge variant="light" color={totalStock > 0 ? 'green' : 'red'} size="lg" radius="md">
-              {totalStock > 0 ? 'IN STOCK' : 'OUT OF STOCK'}
-            </Badge>
-          </Group>
-        </Stack>
+      <Stack gap="md">
+        {/* Design Name Block */}
+        <Box style={{ minWidth: 0 }}>
+          <Text size="xs" fw={800} c="gray.5" lts={1} tt="uppercase" mb={2}>
+            DESIGN NUMBER
+          </Text>
+          <Title
+            order={1}
+            fw={900}
+            style={{
+              fontSize: '24px',
+              letterSpacing: '-0.5px',
+              color: 'var(--mantine-color-gray-9)',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {item.designNo}
+          </Title>
+        </Box>
 
-        <Group grow gap="md" wrap="wrap">
-          <StatBox label="Entries" value={entriesCount} color="gray" icon="list" />
-          <StatBox label="Balance" value={`${totalStock} Pcs`} color="blue" icon="stock" />
-          <StatBox label="Valuation" value={`₹${totalValue}`} color="green" icon="price" />
+        {/* Consolidated Metrics Group - High Density & Zero Duplicate Elements */}
+        <Group justify="space-between" align="flex-end" mt={4} wrap="nowrap">
+          {/* Main Financial Metric */}
+          <Stack gap={2} style={{ minWidth: 0, flex: 1 }}>
+            <Text size="xs" c="dimmed" fw={800} lts={0.5}>
+              VALUATION
+            </Text>
+            <Title
+              order={2}
+              fw={900}
+              c="teal.8"
+              style={{
+                fontSize: '24px',
+                letterSpacing: '-0.3px',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              ₹{totalValue.toLocaleString()}
+            </Title>
+          </Stack>
+
+          {/* Current Stock Metric */}
+          <Stack gap={2} align="flex-end" style={{ flexShrink: 0 }}>
+            <Text size="xs" c="dimmed" fw={800} lts={0.5}>
+              TOTAL STOCK
+            </Text>
+            <Text
+              size="xl"
+              fw={900}
+              style={{ color: 'var(--mantine-color-gray-8)', lineHeight: 1.2 }}
+            >
+              {totalStock}
+            </Text>
+          </Stack>
         </Group>
       </Stack>
     </Paper>
-  );
-}
-
-function StatBox({
-  label,
-  value,
-  color,
-}: {
-  label: string;
-  value: number | string;
-  color: 'gray' | 'blue' | 'green';
-  icon: string;
-}) {
-  const getColors = () => {
-    switch (color) {
-      case 'green':
-        return {
-          bg: 'var(--mantine-color-teal-0)',
-          border: 'var(--mantine-color-teal-1)',
-          text: 'teal.7',
-          valColor: 'teal.9',
-        };
-      case 'blue':
-        return {
-          bg: 'var(--mantine-color-blue-0)',
-          border: 'var(--mantine-color-blue-1)',
-          text: 'blue.7',
-          valColor: 'blue.9',
-        };
-      case 'gray':
-      default:
-        return {
-          bg: 'var(--mantine-color-gray-0)',
-          border: 'var(--mantine-color-gray-1)',
-          text: 'dimmed',
-          valColor: 'dark.4',
-        };
-    }
-  };
-
-  const colors = getColors();
-
-  return (
-    <Box
-      p="md"
-      style={{
-        backgroundColor: colors.bg,
-        borderRadius: '20px',
-        border: `1px solid ${colors.border}`,
-        flexMinWidth: '100px',
-      }}
-      data-testid={`stat-box-${label.toLowerCase().replace(' ', '-')}`}
-    >
-      <Text
-        size="xs"
-        c={colors.text as 'dimmed' | 'blue.7' | 'teal.7'}
-        tt="uppercase"
-        fw={800}
-        lts={1}
-        mb={4}
-      >
-        {label}
-      </Text>
-      <Text
-        fw={900}
-        size="20px"
-        c={colors.valColor}
-        style={{ whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}
-      >
-        {value}
-      </Text>
-    </Box>
   );
 }
