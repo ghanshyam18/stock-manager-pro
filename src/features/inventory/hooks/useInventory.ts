@@ -58,12 +58,16 @@ export function useInventory() {
       // Date filter path: aggregate from inventory transactions
       let collection = db.inventory.toCollection();
 
-      // Filter by date
-      collection = collection.filter((item) => {
-        const matchesStart = !dateFilter.start || item.date >= dateFilter.start;
-        const matchesEnd = !dateFilter.end || item.date <= dateFilter.end;
-        return matchesStart && matchesEnd;
-      });
+      // Filter by date using B-tree index
+      if (dateFilter.start && dateFilter.end) {
+        collection = db.inventory
+          .where('date')
+          .between(dateFilter.start, dateFilter.end, true, true);
+      } else if (dateFilter.start) {
+        collection = db.inventory.where('date').aboveOrEqual(dateFilter.start);
+      } else if (dateFilter.end) {
+        collection = db.inventory.where('date').belowOrEqual(dateFilter.end);
+      }
 
       // Filter by search
       if (deferredSearch) {
@@ -108,12 +112,16 @@ export function useInventory() {
       // Date filter path: must query inventory, filter, and group
       let collection = db.inventory.toCollection();
 
-      // Filter by date
-      collection = collection.filter((item) => {
-        const matchesStart = !dateFilter.start || item.date >= dateFilter.start;
-        const matchesEnd = !dateFilter.end || item.date <= dateFilter.end;
-        return matchesStart && matchesEnd;
-      });
+      // Filter by date using B-tree index
+      if (dateFilter.start && dateFilter.end) {
+        collection = db.inventory
+          .where('date')
+          .between(dateFilter.start, dateFilter.end, true, true);
+      } else if (dateFilter.start) {
+        collection = db.inventory.where('date').aboveOrEqual(dateFilter.start);
+      } else if (dateFilter.end) {
+        collection = db.inventory.where('date').belowOrEqual(dateFilter.end);
+      }
 
       // Filter by search
       if (deferredSearch) {

@@ -86,14 +86,14 @@ export class StockDatabase extends Dexie {
     this.version(4)
       .stores({
         designs: 'designNo, createdAt, updatedAt',
-        inventory: '++id, designNo, date, createdAt, updatedAt, [designNo+date]',
+        inventory: '++id, designNo, date',
       })
       .upgrade(async (tx) => {
         const inventoryTable = tx.table('inventory');
         const designsTable = tx.table('designs');
 
         const allInventory = await inventoryTable.toArray();
-        const designMap = new Map<string, DesignItem>();
+        const designMap = new Map<string, DesignItem & { imageUpdatedAt: number }>();
 
         for (const item of allInventory) {
           const designNo = item.designNo;
@@ -108,6 +108,7 @@ export class StockDatabase extends Dexie {
             designMap.set(designNo, {
               designNo,
               image: itemImage || null,
+              imageUpdatedAt: itemImage ? itemUpdatedAt : 0,
               totalQuantity: qty,
               totalValue: qty * price,
               createdAt: itemCreatedAt,
@@ -121,14 +122,22 @@ export class StockDatabase extends Dexie {
             }
             if (itemUpdatedAt > existing.updatedAt) {
               existing.updatedAt = itemUpdatedAt;
-              if (itemImage) {
+            }
+
+            if (itemImage) {
+              if (!existing.image || itemUpdatedAt > existing.imageUpdatedAt) {
                 existing.image = itemImage;
+                existing.imageUpdatedAt = itemUpdatedAt;
               }
             }
           }
         }
 
-        const designsToInsert = Array.from(designMap.values());
+        const designsToInsert = Array.from(designMap.values()).map((d) => {
+          const { imageUpdatedAt, ...designData } = d;
+          return designData as DesignItem;
+        });
+
         if (designsToInsert.length > 0) {
           await designsTable.bulkPut(designsToInsert);
         }
@@ -157,29 +166,32 @@ export class StockDatabase extends Dexie {
         delete obj.image;
       }
 
-      designsTable.get(obj.designNo).then((design) => {
-        if (design) {
-          const updateData: DesignItem = {
-            ...design,
-            totalQuantity: design.totalQuantity + qty,
-            totalValue: design.totalValue + val,
-            updatedAt: Date.now(),
-          };
-          if (imageToSave) {
-            updateData.image = imageToSave;
+      designsTable
+        .get(obj.designNo)
+        .then((design) => {
+          if (design) {
+            const updateData: DesignItem = {
+              ...design,
+              totalQuantity: design.totalQuantity + qty,
+              totalValue: design.totalValue + val,
+              updatedAt: Date.now(),
+            };
+            if (imageToSave) {
+              updateData.image = imageToSave;
+            }
+            designsTable.put(updateData);
+          } else {
+            designsTable.add({
+              designNo: obj.designNo,
+              image: imageToSave || null,
+              totalQuantity: qty,
+              totalValue: val,
+              createdAt: Date.now(),
+              updatedAt: Date.now(),
+            });
           }
-          designsTable.put(updateData);
-        } else {
-          designsTable.add({
-            designNo: obj.designNo,
-            image: imageToSave || null,
-            totalQuantity: qty,
-            totalValue: val,
-            createdAt: Date.now(),
-            updatedAt: Date.now(),
-          });
-        }
-      });
+        })
+        .catch((err) => console.error('Aggregation error in creating hook:', err));
     });
 
     this.inventory.hook(
@@ -209,54 +221,63 @@ export class StockDatabase extends Dexie {
 
         if (designNo !== obj.designNo) {
           // Handle design number changes (transfer totals between designs)
-          designsTable.get(obj.designNo).then((oldDesign) => {
-            if (oldDesign) {
-              const nextQty = Math.max(0, oldDesign.totalQuantity - oldQty);
-              const nextVal = Math.max(0, oldDesign.totalValue - oldVal);
-              if (nextQty === 0) {
-                designsTable.delete(obj.designNo);
-              } else {
+          designsTable
+            .get(obj.designNo)
+            .then((oldDesign) => {
+              if (oldDesign) {
+                const nextQty = Math.max(0, oldDesign.totalQuantity - oldQty);
+                const nextVal = Math.max(0, oldDesign.totalValue - oldVal);
+                if (nextQty === 0) {
+                  designsTable.delete(obj.designNo);
+                } else {
+                  designsTable.put({
+                    ...oldDesign,
+                    totalQuantity: nextQty,
+                    totalValue: nextVal,
+                    updatedAt: Date.now(),
+                  });
+                }
+              }
+            })
+            .catch((err) => console.error('Aggregation error transferring from old design:', err));
+
+          designsTable
+            .get(designNo)
+            .then((newDesign) => {
+              if (newDesign) {
                 designsTable.put({
-                  ...oldDesign,
-                  totalQuantity: nextQty,
-                  totalValue: nextVal,
+                  ...newDesign,
+                  totalQuantity: newDesign.totalQuantity + newQty,
+                  totalValue: newDesign.totalValue + newVal,
+                  updatedAt: Date.now(),
+                });
+              } else {
+                designsTable.add({
+                  designNo,
+                  image: null,
+                  totalQuantity: newQty,
+                  totalValue: newVal,
+                  createdAt: Date.now(),
                   updatedAt: Date.now(),
                 });
               }
-            }
-          });
-
-          designsTable.get(designNo).then((newDesign) => {
-            if (newDesign) {
-              designsTable.put({
-                ...newDesign,
-                totalQuantity: newDesign.totalQuantity + newQty,
-                totalValue: newDesign.totalValue + newVal,
-                updatedAt: Date.now(),
-              });
-            } else {
-              designsTable.add({
-                designNo,
-                image: null,
-                totalQuantity: newQty,
-                totalValue: newVal,
-                createdAt: Date.now(),
-                updatedAt: Date.now(),
-              });
-            }
-          });
+            })
+            .catch((err) => console.error('Aggregation error transferring to new design:', err));
         } else {
           // Normal update to the same design
-          designsTable.get(designNo).then((design) => {
-            if (design) {
-              designsTable.put({
-                ...design,
-                totalQuantity: design.totalQuantity + qtyDelta,
-                totalValue: design.totalValue + valDelta,
-                updatedAt: Date.now(),
-              });
-            }
-          });
+          designsTable
+            .get(designNo)
+            .then((design) => {
+              if (design) {
+                designsTable.put({
+                  ...design,
+                  totalQuantity: design.totalQuantity + qtyDelta,
+                  totalValue: design.totalValue + valDelta,
+                  updatedAt: Date.now(),
+                });
+              }
+            })
+            .catch((err) => console.error('Aggregation error in updating hook:', err));
         }
       }
     );
@@ -268,22 +289,25 @@ export class StockDatabase extends Dexie {
       const price = Number(obj.price || 0);
       const val = qty * price;
 
-      designsTable.get(obj.designNo).then((design) => {
-        if (design) {
-          const nextQty = Math.max(0, design.totalQuantity - qty);
-          const nextVal = Math.max(0, design.totalValue - val);
-          if (nextQty === 0) {
-            designsTable.delete(obj.designNo);
-          } else {
-            designsTable.put({
-              ...design,
-              totalQuantity: nextQty,
-              totalValue: nextVal,
-              updatedAt: Date.now(),
-            });
+      designsTable
+        .get(obj.designNo)
+        .then((design) => {
+          if (design) {
+            const nextQty = Math.max(0, design.totalQuantity - qty);
+            const nextVal = Math.max(0, design.totalValue - val);
+            if (nextQty === 0) {
+              designsTable.delete(obj.designNo);
+            } else {
+              designsTable.put({
+                ...design,
+                totalQuantity: nextQty,
+                totalValue: nextVal,
+                updatedAt: Date.now(),
+              });
+            }
           }
-        }
-      });
+        })
+        .catch((err) => console.error('Aggregation error in deleting hook:', err));
     });
   }
 }
