@@ -7,7 +7,9 @@ export const inventoryService = {
     if (!id) return false;
 
     try {
-      await db.inventory.delete(id);
+      await db.transaction('rw', db.inventory, db.designs, async () => {
+        await db.inventory.delete(id);
+      });
       notifications.show({
         title: 'Deleted',
         message: 'Item removed from history',
@@ -28,11 +30,13 @@ export const inventoryService = {
   async addStock(item: Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>) {
     try {
       const now = Date.now();
-      await db.inventory.add({
-        ...item,
-        createdAt: now,
-        updatedAt: now,
-      } as InventoryItem);
+      await db.transaction('rw', db.inventory, db.designs, async () => {
+        await db.inventory.add({
+          ...item,
+          createdAt: now,
+          updatedAt: now,
+        } as InventoryItem);
+      });
       notifications.show({
         title: 'Success',
         message: 'Stock item added successfully',

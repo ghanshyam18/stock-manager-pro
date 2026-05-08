@@ -134,7 +134,7 @@ export class StockDatabase extends Dexie {
         }
 
         const designsToInsert = Array.from(designMap.values()).map((d) => {
-          const { imageUpdatedAt, ...designData } = d;
+          const { imageUpdatedAt: _imageUpdatedAt, ...designData } = d;
           return designData as DesignItem;
         });
 
