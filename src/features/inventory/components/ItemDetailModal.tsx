@@ -4,18 +4,20 @@ import {
   ActionIcon,
   Badge,
   Box,
+  Button,
   Center,
   Group,
   Loader,
+  Modal,
   Paper,
   Stack,
   Text,
   Title,
 } from '@mantine/core';
-import { ContextModalProps, modals } from '@mantine/modals';
+import { ContextModalProps } from '@mantine/modals';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Trash2, X } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { SafeImage } from '@/shared/components/SafeImage';
 import { useNativeBack } from '@/shared/hooks/useNativeBack';
@@ -38,25 +40,11 @@ export function ItemDetailModal({
   const { history, totalStock, totalValue, entriesCount, loadMore, hasMore, isLoadingMore } =
     useItemDetails(item);
 
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+
   const handleDelete = (recordId?: number) => {
     if (!recordId) return;
-    modals.openConfirmModal({
-      title: <Text fw={800}>Delete Record</Text>,
-      children: (
-        <Text size="sm" fw={500}>
-          Are you sure you want to delete this inventory record? This action is permanent and cannot
-          be undone.
-        </Text>
-      ),
-      labels: { confirm: 'Delete', cancel: 'Keep it' },
-      confirmProps: { color: 'red', radius: 'xl' },
-      cancelProps: { variant: 'subtle', radius: 'xl' },
-      centered: true,
-      radius: 'lg',
-      onConfirm: async () => {
-        await inventoryService.deleteItem(recordId);
-      },
-    });
+    setDeleteTargetId(recordId);
   };
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -220,6 +208,48 @@ export function ItemDetailModal({
           </Center>
         )}
       </div>
+
+      {/* Local Delete Confirmation Modal - Bypasses global stack to keep details modal visible in background */}
+      <Modal
+        opened={deleteTargetId !== null}
+        onClose={() => setDeleteTargetId(null)}
+        title={<Text fw={800}>Delete Record</Text>}
+        centered
+        radius="lg"
+        zIndex={2000}
+        styles={{
+          header: { fontWeight: 800 },
+        }}
+      >
+        <Stack gap="md">
+          <Text size="sm" fw={500}>
+            Are you sure you want to delete this inventory record? This action is permanent and
+            cannot be undone.
+          </Text>
+          <Group justify="flex-end" gap="sm">
+            <Button
+              variant="subtle"
+              color="gray"
+              radius="xl"
+              onClick={() => setDeleteTargetId(null)}
+            >
+              Keep it
+            </Button>
+            <Button
+              color="red"
+              radius="xl"
+              onClick={async () => {
+                if (deleteTargetId) {
+                  await inventoryService.deleteItem(deleteTargetId);
+                  setDeleteTargetId(null);
+                }
+              }}
+            >
+              Delete
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Box>
   );
 }
