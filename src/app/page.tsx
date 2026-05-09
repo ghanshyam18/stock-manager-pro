@@ -3,6 +3,7 @@
 import { Box, Container, Group, Paper, Text, Title, Transition } from '@mantine/core';
 
 import { AddStockForm } from '@/features/inventory/components/AddStockForm';
+import { DataManagementCard } from '@/features/inventory/components/DataManagementCard';
 import { InventoryView } from '@/features/inventory/components/InventoryView';
 import { BottomNavigation } from '@/shared/components/BottomNavigation';
 import { useNativeBack } from '@/shared/hooks/useNativeBack';
@@ -89,6 +90,8 @@ export default function Home() {
                     </Title>
                     <AddStockForm onClear={() => setActiveTab('inventory')} />
                   </Paper>
+
+                  <DataManagementCard />
                 </Box>
               )}
             </Transition>
