@@ -162,6 +162,7 @@ export function AddStockForm({ onClear }: AddStockFormProps) {
           leftSection={<Save size={18} />}
           size="md"
           mt="md"
+          color="blue"
           data-testid="submit-stock-button"
         >
           Save Stock Item
