@@ -18,7 +18,10 @@ export interface AddStockFormValues {
 
 export function useAddStock(onClear?: () => void) {
   const [loading, setLoading] = useState(false);
-  const [designOptions, setDesignOptions] = useState<string[]>([]);
+  const [allDesignKeys, setAllDesignKeys] = useState<string[]>([]);
+  const [designOptions, setDesignOptions] = useState<
+    Array<{ value: string; image: Blob | string | null }>
+  >([]);
   const [imagePreview, setImagePreview] = useState<Blob | string | null>(null);
 
   const [existingDesign, setExistingDesign] = useState<DesignItem | null>(null);
@@ -48,18 +51,45 @@ export function useAddStock(onClear?: () => void) {
     },
   });
 
-  // Suggest options from designs table keys
+  // Tier 1: Fetch lightweight design keys into memory
   useEffect(() => {
-    const fetchDesigns = async () => {
+    const fetchKeys = async () => {
       try {
         const keys = await db.designs.orderBy('designNo').keys();
-        setDesignOptions(keys.map((k) => String(k)));
+        setAllDesignKeys(keys.map(String));
       } catch (error) {
-        console.error('Failed to fetch design options:', error);
+        console.error('Failed to fetch design keys:', error);
       }
     };
-    fetchDesigns();
+    fetchKeys();
   }, []);
+
+  // Tier 2: Dynamically resolve top 10 matches with full object blobs
+  useEffect(() => {
+    const resolveOptions = async () => {
+      try {
+        const searchVal = form.values.designNo?.trim().toLowerCase() || '';
+        const matchingKeys = allDesignKeys
+          .filter((k) => k.toLowerCase().includes(searchVal))
+          .slice(0, 10);
+
+        const fullDesigns = await Promise.all(matchingKeys.map((k) => db.designs.get(k)));
+
+        setDesignOptions(
+          fullDesigns.filter(Boolean).map((d) => ({
+            value: d!.designNo,
+            image: d!.image || null,
+          }))
+        );
+      } catch (error) {
+        console.error('Failed to resolve design options:', error);
+      }
+    };
+
+    if (allDesignKeys.length > 0) {
+      resolveOptions();
+    }
+  }, [form.values.designNo, allDesignKeys]);
 
   // Reactive Design Lookup
   useEffect(() => {

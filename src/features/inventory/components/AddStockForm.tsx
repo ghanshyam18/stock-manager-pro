@@ -2,16 +2,18 @@
 
 import {
   Autocomplete,
+  Avatar,
   Box,
   Button,
   FileInput,
+  Group,
   NumberInput,
   Stack,
   Switch,
   Text,
   TextInput,
 } from '@mantine/core';
-import { Save, Upload, X } from 'lucide-react';
+import { Package, Save, Upload, X } from 'lucide-react';
 
 import { SafeImage } from '@/shared/components/SafeImage';
 
@@ -48,7 +50,24 @@ export function AddStockForm({ onClear }: AddStockFormProps) {
         <Autocomplete
           label="Design No"
           placeholder="e.g. D-101"
-          data={designOptions}
+          data={designOptions.map((opt) => opt.value)}
+          renderOption={({ option }) => {
+            const richOption = designOptions.find((opt) => opt.value === option.value);
+            return (
+              <Group gap="sm">
+                {richOption?.image ? (
+                  <SafeImage src={richOption.image} w={32} h={32} radius="sm" fit="cover" />
+                ) : (
+                  <Avatar size={32} radius="sm" color="blue">
+                    <Package size={16} />
+                  </Avatar>
+                )}
+                <Text size="sm" fw={500}>
+                  {option.value}
+                </Text>
+              </Group>
+            );
+          }}
           required
           {...form.getInputProps('designNo')}
           data-testid="input-design-no"

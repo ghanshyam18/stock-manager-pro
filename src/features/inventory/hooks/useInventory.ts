@@ -181,10 +181,40 @@ export function useInventory() {
   }, [deferredSearch, dateFilter, limit]);
 
   // Suggestions for auto-complete: fast query directly from unique designs table
-  const designSuggestions = useLiveQuery(async () => {
+  const [designSuggestions, setDesignSuggestions] = useState<
+    Array<{ value: string; image: Blob | string | null }>
+  >([]);
+
+  const allDesignKeys = useLiveQuery(async () => {
     const keys = await db.designs.orderBy('designNo').keys();
-    return keys.map((k) => String(k));
+    return keys.map(String);
   }, []);
+
+  useEffect(() => {
+    const resolveOptions = async () => {
+      try {
+        const searchVal = deferredSearch.toLowerCase();
+        const matchingKeys = (allDesignKeys || [])
+          .filter((k) => k.toLowerCase().includes(searchVal))
+          .slice(0, 10);
+
+        const fullDesigns = await Promise.all(matchingKeys.map((k) => db.designs.get(k)));
+
+        setDesignSuggestions(
+          fullDesigns.filter(Boolean).map((d) => ({
+            value: d!.designNo,
+            image: d!.image || null,
+          }))
+        );
+      } catch (error) {
+        console.error('Failed to resolve design suggestions:', error);
+      }
+    };
+
+    if (allDesignKeys) {
+      resolveOptions();
+    }
+  }, [deferredSearch, allDesignKeys]);
 
   // Reset pagination when filters change
   useEffect(() => {
