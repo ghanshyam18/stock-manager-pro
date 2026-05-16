@@ -1,8 +1,7 @@
-import { type Collection } from 'dexie';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useCallback, useDeferredValue, useEffect, useState } from 'react';
 
-import { db, type InventoryItem } from '../services/db';
+import { db, type DesignItem } from '../services/db';
 
 export interface DateFilter {
   start: string;
@@ -12,8 +11,8 @@ export interface DateFilter {
 const PAGE_SIZE = 50;
 
 /**
- * useInventory hook manages paginated data fetching and filtering.
- * High-Performance: Uses DB-level limit() and a loading gate to ensure
+ * useInventory hook manages paginated data fetching and filtering of unique designs.
+ * High-Performance: Uses DB-level indexing and smart aggregates to ensure
  * smooth, scalable data handling.
  */
 export function useInventory() {
@@ -26,72 +25,196 @@ export function useInventory() {
   const [limit, setLimit] = useState(PAGE_SIZE);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  // Helper to apply filters to a collection
-  const applyFilters = useCallback(
-    (collection: Collection<InventoryItem, number>) => {
-      let filtered = collection;
-
-      if (deferredSearch) {
-        const lowerSearch = deferredSearch.toLowerCase();
-        filtered = filtered.filter((item: InventoryItem) =>
-          item.designNo.toLowerCase().includes(lowerSearch)
-        );
-      }
-
-      if (dateFilter.start || dateFilter.end) {
-        filtered = filtered.filter((item: InventoryItem) => {
-          const matchesStart = !dateFilter.start || item.date >= dateFilter.start;
-          const matchesEnd = !dateFilter.end || item.date <= dateFilter.end;
-          return matchesStart && matchesEnd;
-        });
-      }
-
-      return filtered;
-    },
-    [deferredSearch, dateFilter]
-  );
+  const isDateFilterActive = !!(dateFilter.start || dateFilter.end);
 
   // 1. Stats Query
   const stats = useLiveQuery(async () => {
-    const collection = db.inventory.orderBy('date').reverse();
-    const filteredCollection = applyFilters(collection);
+    if (!isDateFilterActive) {
+      // Direct fast path: query designs table
+      let collection = db.designs.toCollection();
 
-    const totalCount = await filteredCollection.count();
+      if (deferredSearch) {
+        const lowerSearch = deferredSearch.toLowerCase();
+        collection = collection.filter((d) => d.designNo.toLowerCase().includes(lowerSearch));
+      }
 
-    let totalQty = 0;
-    let totalValue = 0;
-    const designs = new Set<string>();
+      let totalQty = 0;
+      let totalValue = 0;
+      let count = 0;
 
-    await filteredCollection.each((item) => {
-      totalQty += item.quantity;
-      totalValue += item.quantity * item.price;
-      designs.add(item.designNo);
-    });
+      await collection.each((d) => {
+        totalQty += d.totalQuantity;
+        totalValue += d.totalValue;
+        count++;
+      });
 
-    return {
-      totalQty,
-      totalValue,
-      uniqueDesigns: designs.size,
-      totalCount,
-    };
+      return {
+        totalQty,
+        totalValue,
+        uniqueDesigns: count,
+        totalCount: count,
+      };
+    } else {
+      // Date filter path: aggregate from inventory transactions
+      let collection = db.inventory.toCollection();
+
+      // Filter by date using B-tree index
+      if (dateFilter.start && dateFilter.end) {
+        collection = db.inventory
+          .where('date')
+          .between(dateFilter.start, dateFilter.end, true, true);
+      } else if (dateFilter.start) {
+        collection = db.inventory.where('date').aboveOrEqual(dateFilter.start);
+      } else if (dateFilter.end) {
+        collection = db.inventory.where('date').belowOrEqual(dateFilter.end);
+      }
+
+      // Filter by search
+      if (deferredSearch) {
+        const lowerSearch = deferredSearch.toLowerCase();
+        collection = collection.filter((item) => item.designNo.toLowerCase().includes(lowerSearch));
+      }
+
+      let totalQty = 0;
+      let totalValue = 0;
+      const designs = new Set<string>();
+
+      await collection.each((item) => {
+        totalQty += item.quantity;
+        totalValue += item.quantity * item.price;
+        designs.add(item.designNo);
+      });
+
+      return {
+        totalQty,
+        totalValue,
+        uniqueDesigns: designs.size,
+        totalCount: designs.size,
+      };
+    }
   }, [deferredSearch, dateFilter]);
 
-  // 2. Paginated List Query
+  // 2. Paginated List Query of Designs
   const filteredItems = useLiveQuery(async () => {
-    const collection = db.inventory.orderBy('date').reverse();
-    const filteredCollection = applyFilters(collection);
+    if (!isDateFilterActive) {
+      // Query designs directly from designs table ordered by updatedAt in reverse
+      let collection = db.designs.orderBy('updatedAt').reverse();
 
-    const result = await filteredCollection.limit(limit).toArray();
+      if (deferredSearch) {
+        const lowerSearch = deferredSearch.toLowerCase();
+        collection = collection.filter((d) => d.designNo.toLowerCase().includes(lowerSearch));
+      }
 
-    // Reset loading state once data is retrieved
-    setIsLoadingMore(false);
-    return result;
+      const result = await collection.limit(limit).toArray();
+      setIsLoadingMore(false);
+      return result;
+    } else {
+      // Date filter path: must query inventory, filter, and group
+      let collection = db.inventory.toCollection();
+
+      // Filter by date using B-tree index
+      if (dateFilter.start && dateFilter.end) {
+        collection = db.inventory
+          .where('date')
+          .between(dateFilter.start, dateFilter.end, true, true);
+      } else if (dateFilter.start) {
+        collection = db.inventory.where('date').aboveOrEqual(dateFilter.start);
+      } else if (dateFilter.end) {
+        collection = db.inventory.where('date').belowOrEqual(dateFilter.end);
+      }
+
+      // Filter by search
+      if (deferredSearch) {
+        const lowerSearch = deferredSearch.toLowerCase();
+        collection = collection.filter((item) => item.designNo.toLowerCase().includes(lowerSearch));
+      }
+
+      // Aggregate in-memory
+      const groups = new Map<
+        string,
+        { designNo: string; totalQuantity: number; totalValue: number; updatedAt: number }
+      >();
+      await collection.each((item) => {
+        const existing = groups.get(item.designNo);
+        const qty = Number(item.quantity || 0);
+        const val = qty * Number(item.price || 0);
+        const itemTime = item.updatedAt || item.createdAt || 0;
+
+        if (existing) {
+          existing.totalQuantity += qty;
+          existing.totalValue += val;
+          if (itemTime > existing.updatedAt) {
+            existing.updatedAt = itemTime;
+          }
+        } else {
+          groups.set(item.designNo, {
+            designNo: item.designNo,
+            totalQuantity: qty,
+            totalValue: val,
+            updatedAt: itemTime,
+          });
+        }
+      });
+
+      // Sort and paginate
+      const sorted = Array.from(groups.values()).sort((a, b) => b.updatedAt - a.updatedAt);
+      const paginated = sorted.slice(0, limit);
+
+      // Resolve design details (image, createdAt)
+      const resolvedItems = await Promise.all(
+        paginated.map(async (p) => {
+          const design = await db.designs.get(p.designNo);
+          return {
+            designNo: p.designNo,
+            image: design?.image || null,
+            totalQuantity: p.totalQuantity,
+            totalValue: p.totalValue,
+            createdAt: design?.createdAt || p.updatedAt,
+            updatedAt: design?.updatedAt || p.updatedAt,
+          } as DesignItem;
+        })
+      );
+
+      setIsLoadingMore(false);
+      return resolvedItems;
+    }
   }, [deferredSearch, dateFilter, limit]);
 
-  const designSuggestions = useLiveQuery(async () => {
-    const keys = await db.inventory.orderBy('designNo').uniqueKeys();
-    return keys.map((k) => String(k));
+  // Suggestions for auto-complete: fast query directly from unique designs table
+  const [designSuggestions, setDesignSuggestions] = useState<
+    Array<{ value: string; image: Blob | string | null }>
+  >([]);
+
+  const allDesignKeys = useLiveQuery(async () => {
+    const keys = await db.designs.orderBy('designNo').keys();
+    return keys.map(String);
   }, []);
+
+  useEffect(() => {
+    const resolveOptions = async () => {
+      try {
+        const searchVal = deferredSearch.toLowerCase();
+        const matchingKeys = (allDesignKeys || [])
+          .filter((k) => k.toLowerCase().includes(searchVal))
+          .slice(0, 10);
+
+        const fullDesigns = await Promise.all(matchingKeys.map((k) => db.designs.get(k)));
+
+        setDesignSuggestions(
+          fullDesigns.filter(Boolean).map((d) => ({
+            value: d!.designNo,
+            image: d!.image || null,
+          }))
+        );
+      } catch (error) {
+        console.error('Failed to resolve design suggestions:', error);
+      }
+    };
+
+    if (allDesignKeys) {
+      resolveOptions();
+    }
+  }, [deferredSearch, allDesignKeys]);
 
   // Reset pagination when filters change
   useEffect(() => {
@@ -123,7 +246,7 @@ export function useInventory() {
     setSearch: handleSearchChange,
     dateFilter,
     setDateFilter: handleDateFilterChange,
-    isFilterActive: !!(dateFilter.start || dateFilter.end),
+    isFilterActive: isDateFilterActive,
     loadMore,
     hasMore: (filteredItems?.length || 0) < (stats?.totalCount || 0),
     isLoadingMore,

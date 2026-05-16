@@ -1,6 +1,6 @@
 import { notifications } from '@mantine/notifications';
 
-import { db } from '@/features/inventory/services/db';
+import { db, type DesignItem, type InventoryItem } from '@/features/inventory/services/db';
 
 /**
  * DataManagement - SaaS-Grade Data Portability.
@@ -68,6 +68,83 @@ export const DataManagement = {
           return true;
         },
       });
+
+      // Post-import verification for Legacy Backups (V1/V2/V3) which don't have the 'designs' table populated
+      const inventoryCount = await db.inventory.count();
+      const designsCount = await db.designs.count();
+
+      if (inventoryCount > 0 && designsCount === 0) {
+        console.warn('Legacy backup detected. Reconstructing designs table aggregates...');
+
+        await db.transaction('rw', db.inventory, db.designs, async () => {
+          const allInventory = await db.inventory.toArray();
+          const designMap = new Map<string, DesignItem & { imageUpdatedAt: number }>();
+
+          for (const item of allInventory) {
+            const designNo = item.designNo;
+            const qty = Number(item.quantity || 0);
+            const price = Number(item.price || 0);
+            let itemImage = item.image;
+
+            // Support base64 image migration if any exist from older schemas
+            if (typeof itemImage === 'string' && itemImage.startsWith('data:')) {
+              try {
+                const response = await fetch(itemImage);
+                itemImage = await response.blob();
+              } catch (err) {
+                console.error('Failed to convert base64 image to Blob during legacy restore:', err);
+              }
+            }
+
+            const itemUpdatedAt = item.updatedAt || item.createdAt || Date.now();
+            const itemCreatedAt = item.createdAt || item.updatedAt || Date.now();
+
+            const existing = designMap.get(designNo);
+            if (!existing) {
+              designMap.set(designNo, {
+                designNo,
+                image: itemImage || null,
+                imageUpdatedAt: itemImage ? itemUpdatedAt : 0,
+                totalQuantity: qty,
+                totalValue: qty * price,
+                createdAt: itemCreatedAt,
+                updatedAt: itemUpdatedAt,
+              });
+            } else {
+              existing.totalQuantity += qty;
+              existing.totalValue += qty * price;
+              if (itemCreatedAt < existing.createdAt) {
+                existing.createdAt = itemCreatedAt;
+              }
+              if (itemUpdatedAt > existing.updatedAt) {
+                existing.updatedAt = itemUpdatedAt;
+              }
+
+              if (itemImage) {
+                if (!existing.image || itemUpdatedAt > existing.imageUpdatedAt) {
+                  existing.image = itemImage;
+                  existing.imageUpdatedAt = itemUpdatedAt;
+                }
+              }
+            }
+          }
+
+          const designsToInsert = Array.from(designMap.values()).map((d) => {
+            const { imageUpdatedAt: _imageUpdatedAt, ...designData } = d;
+            return designData;
+          });
+
+          if (designsToInsert.length > 0) {
+            await db.designs.bulkPut(designsToInsert);
+          }
+
+          // Strip legacy image properties from transaction items to avoid duplication
+          await db.inventory.toCollection().modify((item: InventoryItem) => {
+            delete item.image;
+          });
+        });
+        console.warn('Successfully reconstructed designs table aggregates.');
+      }
 
       notifications.show({
         title: 'Restore Successful',

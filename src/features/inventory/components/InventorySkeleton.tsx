@@ -6,35 +6,36 @@ import { Card, Group, Skeleton, Stack } from '@mantine/core';
 export function InventorySkeleton() {
   return (
     <Card
-      padding="xs"
+      padding="sm"
       radius="lg"
       withBorder
-      shadow="xs"
-      style={{ backgroundColor: 'var(--mantine-color-white)', height: 130 }}
+      style={{
+        backgroundColor: 'var(--mantine-color-white)',
+        borderColor: 'var(--mantine-color-gray-2)',
+        boxShadow: 'var(--mantine-shadow-xs)',
+      }}
     >
-      <Group wrap="nowrap" gap="sm" align="center" style={{ height: '100%' }}>
+      <Group wrap="nowrap" gap="md" align="center" style={{ height: '100%' }}>
         {/* Image Skeleton */}
-        <Skeleton w={100} h={100} radius="md" animate />
+        <Skeleton w={80} h={80} radius="md" animate />
 
-        <Stack gap={6} style={{ flex: 1 }}>
-          <Group justify="space-between" wrap="nowrap">
-            {/* Title Skeleton */}
-            <Skeleton h={20} w="60%" radius="sm" animate />
-            {/* Action Icon Skeleton */}
-            <Skeleton h={24} w={24} radius="md" animate />
-          </Group>
+        {/* Content Section Skeleton */}
+        <Stack gap={6} style={{ flex: 1, minWidth: 0 }}>
+          {/* Title Skeleton */}
+          <Skeleton h={20} w="55%" radius="sm" animate />
 
-          {/* Date Skeleton */}
-          <Group gap={4}>
-            <Skeleton h={12} w="30%" radius="xs" animate />
-          </Group>
+          {/* Minimalist parameters representation */}
+          <Group gap="md" wrap="nowrap" align="center" mt={4}>
+            {/* Quantity representation placeholder */}
+            <Skeleton h={16} w={35} radius="sm" animate />
 
-          {/* Badge Skeletons */}
-          <Group gap="xs" mt={8}>
-            <Skeleton h={22} w={60} radius="sm" animate />
-            <Skeleton h={22} w={80} radius="sm" animate />
+            {/* Value representation placeholder */}
+            <Skeleton h={16} w={65} radius="sm" animate />
           </Group>
         </Stack>
+
+        {/* Chevron Action Indicator Skeleton */}
+        <Skeleton h={24} w={24} radius="xl" animate style={{ flexShrink: 0 }} />
       </Group>
     </Card>
   );

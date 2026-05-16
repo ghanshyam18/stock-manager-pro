@@ -3,29 +3,26 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { Search } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 
-import { type InventoryItem } from '../services/db';
+import { type DesignItem } from '../services/db';
 import { InventoryItemCard } from './InventoryItemCard';
 
 interface InventoryHistoryListProps {
-  items: InventoryItem[];
+  items: DesignItem[];
   isMobile: boolean;
-  onDelete: (id?: number) => void;
-  onSelect: (item: InventoryItem) => void;
+  onSelect: (item: DesignItem) => void;
   loadMore: () => void;
   hasMore: boolean;
   totalCount: number;
-  isLoadingMore: boolean; // Added to track active loading state
+  isLoadingMore: boolean;
 }
 
 /**
  * InventoryHistoryList - SaaS-Grade Virtualization.
- * Updated: Uses isLoadingMore to provide accurate visual feedback
- * during paginated loads.
+ * Renders a list of unique Design Items instead of individual transactions.
  */
 export function InventoryHistoryList({
   items,
   isMobile,
-  onDelete,
   onSelect,
   loadMore,
   hasMore,
@@ -37,7 +34,7 @@ export function InventoryHistoryList({
   const rowVirtualizer = useVirtualizer({
     count: items.length,
     getScrollElement: () => scrollRef.current,
-    estimateSize: () => (isMobile ? 140 : 130),
+    estimateSize: () => (isMobile ? 120 : 110), // Slightly smaller card height since details are cleaner now
     overscan: 10,
   });
 
@@ -104,7 +101,7 @@ export function InventoryHistoryList({
                 willChange: 'transform',
               }}
             >
-              <InventoryItemCard item={item} onDelete={onDelete} onSelect={onSelect} />
+              <InventoryItemCard item={item} onSelect={onSelect} />
             </div>
           );
         })}
@@ -121,11 +118,11 @@ export function InventoryHistoryList({
           </Group>
         ) : hasMore ? (
           <Text size="xs" c="dimmed">
-            Scroll for more (Total: {totalCount})
+            Scroll for more (Total Unique: {totalCount})
           </Text>
         ) : (
           <Text size="sm" c="dimmed" fw={600}>
-            All {totalCount} items loaded
+            All {totalCount} designs loaded
           </Text>
         )}
       </Center>

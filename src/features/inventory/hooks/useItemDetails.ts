@@ -1,11 +1,13 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useCallback, useState } from 'react';
 
-import { db, type InventoryItem } from '../services/db';
+import { db, type DesignItem } from '../services/db';
 
 const PAGE_SIZE = 50;
 
-export function useItemDetails(item: InventoryItem | null) {
+export function useItemDetails(
+  item: DesignItem | { designNo: string; image?: Blob | string | null } | null
+) {
   const [limit, setLimit] = useState(PAGE_SIZE);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
@@ -22,19 +24,23 @@ export function useItemDetails(item: InventoryItem | null) {
 
     setIsLoadingMore(false);
     return results;
-  }, [item, limit]);
+  }, [item?.designNo, limit]);
 
   // 2. Fetch Total Stats (Independent of pagination)
   const stats = useLiveQuery(async () => {
-    if (!item) return { totalStock: 0, entriesCount: 0 };
-    const allMatching = await db.inventory.where('designNo').equals(item.designNo).toArray();
+    if (!item) return { totalStock: 0, totalValue: 0, entriesCount: 0 };
 
-    const totalStock = allMatching.reduce((sum, i) => sum + i.quantity, 0);
+    const [design, entriesCount] = await Promise.all([
+      db.designs.get(item.designNo),
+      db.inventory.where('designNo').equals(item.designNo).count(),
+    ]);
+
     return {
-      totalStock,
-      entriesCount: allMatching.length,
+      totalStock: design?.totalQuantity || 0,
+      totalValue: design?.totalValue || 0,
+      entriesCount: entriesCount || 0,
     };
-  }, [item]);
+  }, [item?.designNo]);
 
   const loadMore = useCallback(() => {
     if (history && stats && history.length < stats.entriesCount && !isLoadingMore) {
@@ -46,6 +52,7 @@ export function useItemDetails(item: InventoryItem | null) {
   return {
     history: history || [],
     totalStock: stats?.totalStock || 0,
+    totalValue: stats?.totalValue || 0,
     entriesCount: stats?.entriesCount || 0,
     loadMore,
     hasMore: (history?.length || 0) < (stats?.entriesCount || 0),

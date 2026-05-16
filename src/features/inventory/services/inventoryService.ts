@@ -7,7 +7,9 @@ export const inventoryService = {
     if (!id) return false;
 
     try {
-      await db.inventory.delete(id);
+      await db.transaction('rw', db.inventory, db.designs, async () => {
+        await db.inventory.delete(id);
+      });
       notifications.show({
         title: 'Deleted',
         message: 'Item removed from history',
@@ -28,11 +30,13 @@ export const inventoryService = {
   async addStock(item: Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>) {
     try {
       const now = Date.now();
-      await db.inventory.add({
-        ...item,
-        createdAt: now,
-        updatedAt: now,
-      } as InventoryItem);
+      await db.transaction('rw', db.inventory, db.designs, async () => {
+        await db.inventory.add({
+          ...item,
+          createdAt: now,
+          updatedAt: now,
+        } as InventoryItem);
+      });
       notifications.show({
         title: 'Success',
         message: 'Stock item added successfully',
@@ -44,6 +48,29 @@ export const inventoryService = {
       notifications.show({
         title: 'Error',
         message: 'Failed to save item to database',
+        color: 'red',
+      });
+      return false;
+    }
+  },
+
+  async updateDesignImage(designNo: string, image: Blob | string) {
+    try {
+      await db.designs.update(designNo, {
+        image,
+        updatedAt: Date.now(),
+      });
+      notifications.show({
+        title: 'Success',
+        message: 'Design image updated successfully',
+        color: 'teal',
+      });
+      return true;
+    } catch (error) {
+      console.error('Failed to update design image:', error);
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to update design image',
         color: 'red',
       });
       return false;

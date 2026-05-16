@@ -4,7 +4,6 @@ import { createTheme, MantineProvider } from '@mantine/core';
 import { ModalsProvider } from '@mantine/modals';
 import { Notifications } from '@mantine/notifications';
 
-import { InventoryFilterModal } from '@/features/inventory/components/InventoryFilterModal';
 import { ItemDetailModal } from '@/features/inventory/components/ItemDetailModal';
 
 const theme = createTheme({
@@ -67,7 +66,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <ModalsProvider
         modals={{
           'item-details': ItemDetailModal,
-          'inventory-filters': InventoryFilterModal,
         }}
       >
         {children}
