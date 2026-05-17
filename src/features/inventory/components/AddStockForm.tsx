@@ -78,9 +78,9 @@ export function AddStockForm({ onClear }: AddStockFormProps) {
             gap="xs"
             p="sm"
             style={{
-              border: '1px solid var(--mantine-color-gray-2)',
-              borderRadius: '16px',
-              backgroundColor: 'var(--mantine-color-gray-0)',
+              border: '1px solid var(--mantine-color-default-border)',
+              borderRadius: 'var(--mantine-radius-md)',
+              backgroundColor: 'var(--mantine-color-default-hover)',
             }}
           >
             <Text size="xs" fw={800} c="dimmed" tt="uppercase" lts={1}>

@@ -20,6 +20,43 @@ export interface InventoryItem {
   updatedAt: number;
 }
 
+export interface Party {
+  id?: number;
+  name: string;
+  address?: string;
+  contact?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface Invoice {
+  id?: number;
+  invoiceNo: string;
+  partyId?: number;
+  partyName: string;
+  partyAddress?: string;
+  partyContact?: string;
+  dispatchedThrough?: string;
+  date: string;
+  subtotal: number;
+  discountPercentage: number;
+  discountAmount: number;
+  taxPercentage: number;
+  taxAmount: number;
+  grandTotal: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface InvoiceItem {
+  id?: number;
+  invoiceId: number;
+  designNo: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+}
+
 /**
  * Helper to convert legacy Base64 data URLs to binary Blobs.
  * Used during database migration to optimize storage and performance.
@@ -32,6 +69,9 @@ async function dataURLToBlob(dataURL: string): Promise<Blob> {
 export class StockDatabase extends Dexie {
   inventory!: Table<InventoryItem, number>;
   designs!: Table<DesignItem, string>;
+  parties!: Table<Party, number>;
+  invoices!: Table<Invoice, number>;
+  invoiceItems!: Table<InvoiceItem, number>;
 
   constructor() {
     super('StockManagementDB');
@@ -148,166 +188,13 @@ export class StockDatabase extends Dexie {
         });
       });
 
-    // ==========================================
-    // DEXIE LIFECYCLE HOOKS
-    // Used to automatically keep aggregates and images synchronized
-    // ==========================================
-
-    this.inventory.hook('creating', (primKey, obj, transaction) => {
-      if (!this.isOpen()) return;
-      const designsTable = transaction.table('designs');
-      const qty = Number(obj.quantity || 0);
-      const price = Number(obj.price || 0);
-      const val = qty * price;
-      const imageToSave = obj.image;
-
-      // Strip image from transaction record to prevent storage duplication
-      if (obj.hasOwnProperty('image')) {
-        delete obj.image;
-      }
-
-      designsTable
-        .get(obj.designNo)
-        .then((design) => {
-          if (design) {
-            const updateData: DesignItem = {
-              ...design,
-              totalQuantity: design.totalQuantity + qty,
-              totalValue: design.totalValue + val,
-              updatedAt: Date.now(),
-            };
-            if (imageToSave) {
-              updateData.image = imageToSave;
-            }
-            designsTable.put(updateData);
-          } else {
-            designsTable.add({
-              designNo: obj.designNo,
-              image: imageToSave || null,
-              totalQuantity: qty,
-              totalValue: val,
-              createdAt: Date.now(),
-              updatedAt: Date.now(),
-            });
-          }
-        })
-        .catch((err) => console.error('Aggregation error in creating hook:', err));
-    });
-
-    this.inventory.hook(
-      'updating',
-      (modifications: Partial<InventoryItem>, primKey, obj, transaction) => {
-        if (!this.isOpen()) return;
-        const designsTable = transaction.table('designs');
-
-        const oldQty = Number(obj.quantity || 0);
-        const oldPrice = Number(obj.price || 0);
-        const oldVal = oldQty * oldPrice;
-
-        const newQty = Number(
-          modifications.hasOwnProperty('quantity') ? modifications.quantity : obj.quantity
-        );
-        const newPrice = Number(
-          modifications.hasOwnProperty('price') ? modifications.price : obj.price
-        );
-        const newVal = newQty * newPrice;
-
-        const qtyDelta = newQty - oldQty;
-        const valDelta = newVal - oldVal;
-
-        const designNo = modifications.hasOwnProperty('designNo')
-          ? modifications.designNo
-          : obj.designNo;
-
-        if (designNo !== obj.designNo) {
-          // Handle design number changes (transfer totals between designs)
-          designsTable
-            .get(obj.designNo)
-            .then((oldDesign) => {
-              if (oldDesign) {
-                const nextQty = Math.max(0, oldDesign.totalQuantity - oldQty);
-                const nextVal = Math.max(0, oldDesign.totalValue - oldVal);
-                if (nextQty === 0) {
-                  designsTable.delete(obj.designNo);
-                } else {
-                  designsTable.put({
-                    ...oldDesign,
-                    totalQuantity: nextQty,
-                    totalValue: nextVal,
-                    updatedAt: Date.now(),
-                  });
-                }
-              }
-            })
-            .catch((err) => console.error('Aggregation error transferring from old design:', err));
-
-          designsTable
-            .get(designNo)
-            .then((newDesign) => {
-              if (newDesign) {
-                designsTable.put({
-                  ...newDesign,
-                  totalQuantity: newDesign.totalQuantity + newQty,
-                  totalValue: newDesign.totalValue + newVal,
-                  updatedAt: Date.now(),
-                });
-              } else {
-                designsTable.add({
-                  designNo,
-                  image: null,
-                  totalQuantity: newQty,
-                  totalValue: newVal,
-                  createdAt: Date.now(),
-                  updatedAt: Date.now(),
-                });
-              }
-            })
-            .catch((err) => console.error('Aggregation error transferring to new design:', err));
-        } else {
-          // Normal update to the same design
-          designsTable
-            .get(designNo)
-            .then((design) => {
-              if (design) {
-                designsTable.put({
-                  ...design,
-                  totalQuantity: design.totalQuantity + qtyDelta,
-                  totalValue: design.totalValue + valDelta,
-                  updatedAt: Date.now(),
-                });
-              }
-            })
-            .catch((err) => console.error('Aggregation error in updating hook:', err));
-        }
-      }
-    );
-
-    this.inventory.hook('deleting', (primKey, obj, transaction) => {
-      if (!this.isOpen()) return;
-      const designsTable = transaction.table('designs');
-      const qty = Number(obj.quantity || 0);
-      const price = Number(obj.price || 0);
-      const val = qty * price;
-
-      designsTable
-        .get(obj.designNo)
-        .then((design) => {
-          if (design) {
-            const nextQty = Math.max(0, design.totalQuantity - qty);
-            const nextVal = Math.max(0, design.totalValue - val);
-            if (nextQty === 0) {
-              designsTable.delete(obj.designNo);
-            } else {
-              designsTable.put({
-                ...design,
-                totalQuantity: nextQty,
-                totalValue: nextVal,
-                updatedAt: Date.now(),
-              });
-            }
-          }
-        })
-        .catch((err) => console.error('Aggregation error in deleting hook:', err));
+    // Version 5: Introduces invoices, invoiceItems and parties tables for Quick Invoicing module
+    this.version(5).stores({
+      designs: 'designNo, createdAt, updatedAt',
+      inventory: '++id, designNo, date',
+      parties: '++id, name, updatedAt',
+      invoices: '++id, invoiceNo, partyId, date, createdAt',
+      invoiceItems: '++id, invoiceId, designNo',
     });
   }
 }

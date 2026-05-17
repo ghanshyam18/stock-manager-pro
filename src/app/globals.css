@@ -74,3 +74,13 @@ body {
   box-shadow: var(--mantine-shadow-md);
   border-color: var(--mantine-color-blue-3) !important;
 }
+
+/* Remove browser-native calendar icons to prevent unnecessary data:SVG network loads */
+input[type='date']::-webkit-calendar-picker-indicator {
+  display: none;
+  -webkit-appearance: none;
+}
+
+input[type='date'] {
+  position: relative;
+}

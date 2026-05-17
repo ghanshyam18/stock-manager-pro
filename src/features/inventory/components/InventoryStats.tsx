@@ -59,9 +59,9 @@ export function InventoryStats({ stats }: InventoryStatsProps) {
         w="100%"
         p="xs"
         style={{
-          backgroundColor: 'var(--mantine-color-white)',
-          borderRadius: '16px',
-          border: '1px solid var(--mantine-color-gray-2)',
+          backgroundColor: 'var(--mantine-color-body)',
+          borderRadius: 'var(--mantine-radius-md)',
+          border: '1px solid var(--mantine-color-default-border)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -89,10 +89,10 @@ export function InventoryStats({ stats }: InventoryStatsProps) {
             <Paper
               key={stat.label}
               p="md"
-              radius="20px"
+              radius="lg"
               withBorder
               shadow="sm"
-              bg="white"
+              bg="var(--mantine-color-body)"
               data-testid={`stat-card-${stat.label.toLowerCase().replace(' ', '-')}`}
             >
               <Group justify="space-between" wrap="nowrap">
@@ -118,13 +118,13 @@ export function InventoryStats({ stats }: InventoryStatsProps) {
                 <Box
                   p="xs"
                   style={{
-                    backgroundColor: `var(--mantine-color-${stat.color}-0)`,
+                    backgroundColor: `var(--mantine-color-${stat.color}-light)`,
                     borderRadius: '12px',
                   }}
                 >
                   <stat.icon
                     size={20}
-                    color={`var(--mantine-color-${stat.color}-6)`}
+                    color={`var(--mantine-color-${stat.color}-light-color)`}
                     strokeWidth={2.5}
                   />
                 </Box>

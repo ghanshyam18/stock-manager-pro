@@ -92,7 +92,7 @@ export function ItemDetailModal({
         maxHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: 'var(--mantine-color-gray-0)',
+        backgroundColor: 'var(--mantine-color-body)',
         overflow: 'hidden', // Force scroll to internal div
       }}
     >
@@ -348,9 +348,8 @@ function ModalHeader({ onClose }: { onClose: () => void }) {
         position: 'sticky',
         top: 0,
         zIndex: 100,
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-        backdropFilter: 'blur(12px)',
-        borderBottom: '1px solid var(--mantine-color-gray-2)',
+        backgroundColor: 'var(--mantine-color-body)',
+        borderBottom: '1px solid var(--mantine-color-default-border)',
       }}
       justify="space-between"
       wrap="nowrap"
@@ -386,11 +385,11 @@ function ItemHeroSection({
   return (
     <Paper
       p="md"
-      radius="20px"
+      radius="lg"
       withBorder
       style={{
-        backgroundColor: 'var(--mantine-color-white)',
-        borderColor: 'var(--mantine-color-gray-2)',
+        backgroundColor: 'var(--mantine-color-body)',
+        borderColor: 'var(--mantine-color-default-border)',
         boxShadow: 'var(--mantine-shadow-md)',
       }}
       data-testid="item-hero-section"
@@ -407,7 +406,6 @@ function ItemHeroSection({
             style={{
               fontSize: '24px',
               letterSpacing: '-0.5px',
-              color: 'var(--mantine-color-gray-9)',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
@@ -445,11 +443,7 @@ function ItemHeroSection({
             <Text size="xs" c="dimmed" fw={800} lts={0.5}>
               TOTAL STOCK
             </Text>
-            <Text
-              size="xl"
-              fw={900}
-              style={{ color: 'var(--mantine-color-gray-8)', lineHeight: 1.2 }}
-            >
+            <Text size="xl" fw={900} style={{ lineHeight: 1.2 }}>
               {totalStock}
             </Text>
           </Stack>
