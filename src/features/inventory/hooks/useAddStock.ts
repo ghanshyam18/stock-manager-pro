@@ -1,6 +1,6 @@
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
-import { useEffect, useState } from 'react';
+import { useDeferredValue, useEffect, useState } from 'react';
 
 import { getTodayISODate } from '@/shared/utils/date';
 import { compressImage } from '@/shared/utils/image';
@@ -51,6 +51,8 @@ export function useAddStock(onClear?: () => void) {
     },
   });
 
+  const deferredDesignNo = useDeferredValue(form.values.designNo);
+
   // Tier 1: Fetch lightweight design keys into memory
   useEffect(() => {
     const fetchKeys = async () => {
@@ -68,7 +70,7 @@ export function useAddStock(onClear?: () => void) {
   useEffect(() => {
     const resolveOptions = async () => {
       try {
-        const searchVal = form.values.designNo?.trim().toLowerCase() || '';
+        const searchVal = deferredDesignNo?.trim().toLowerCase() || '';
         const matchingKeys = allDesignKeys
           .filter((k) => k.toLowerCase().includes(searchVal))
           .slice(0, 10);
@@ -89,7 +91,7 @@ export function useAddStock(onClear?: () => void) {
     if (allDesignKeys.length > 0) {
       resolveOptions();
     }
-  }, [form.values.designNo, allDesignKeys]);
+  }, [deferredDesignNo, allDesignKeys]);
 
   // Reactive Design Lookup
   useEffect(() => {

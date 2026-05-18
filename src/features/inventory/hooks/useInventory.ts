@@ -1,12 +1,9 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useCallback, useDeferredValue, useEffect, useState } from 'react';
 
-import { db, type DesignItem } from '../services/db';
+import { type DateFilter } from '@/types/shared.types';
 
-export interface DateFilter {
-  start: string;
-  end: string;
-}
+import { db, type DesignItem } from '../services/db';
 
 const PAGE_SIZE = 50;
 
@@ -42,11 +39,12 @@ export function useInventory() {
       let totalValue = 0;
       let count = 0;
 
-      await collection.each((d) => {
+      const designsList = await collection.toArray();
+      for (const d of designsList) {
         totalQty += d.totalQuantity;
         totalValue += d.totalValue;
         count++;
-      });
+      }
 
       return {
         totalQty,
@@ -79,11 +77,12 @@ export function useInventory() {
       let totalValue = 0;
       const designs = new Set<string>();
 
-      await collection.each((item) => {
+      const itemsList = await collection.toArray();
+      for (const item of itemsList) {
         totalQty += item.quantity;
         totalValue += item.quantity * item.price;
         designs.add(item.designNo);
-      });
+      }
 
       return {
         totalQty,
@@ -134,7 +133,8 @@ export function useInventory() {
         string,
         { designNo: string; totalQuantity: number; totalValue: number; updatedAt: number }
       >();
-      await collection.each((item) => {
+      const itemsList = await collection.toArray();
+      for (const item of itemsList) {
         const existing = groups.get(item.designNo);
         const qty = Number(item.quantity || 0);
         const val = qty * Number(item.price || 0);
@@ -154,7 +154,7 @@ export function useInventory() {
             updatedAt: itemTime,
           });
         }
-      });
+      }
 
       // Sort and paginate
       const sorted = Array.from(groups.values()).sort((a, b) => b.updatedAt - a.updatedAt);

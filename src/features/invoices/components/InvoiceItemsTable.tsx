@@ -16,6 +16,8 @@ import { UseFormReturnType } from '@mantine/form';
 import { Plus, Trash } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
+import { SafeImage } from '@/shared/components/SafeImage';
+
 import { db } from '../../inventory/services/db';
 import { invoiceService } from '../services/invoiceService';
 import { QuickInvoiceFormValues } from './QuickInvoiceForm';
@@ -28,16 +30,21 @@ export const InvoiceItemsTable: React.FC<InvoiceItemsTableProps> = ({ form }) =>
   const [designNos, setDesignNos] = useState<string[]>([]);
 
   useEffect(() => {
-    db.designs.toArray().then((designs) => {
-      setDesignNos(designs.map((d) => d.designNo));
-    });
+    db.designs
+      .orderBy('designNo')
+      .keys()
+      .then((keys) => {
+        setDesignNos(keys.map(String));
+      })
+      .catch((err) => {
+        console.error('Failed to fetch design keys:', err);
+      });
   }, []);
 
   const handleOptionSubmit = async (index: number, val: string) => {
     const design = await invoiceService.getDesign(val);
     if (design && design.image) {
-      const url = design.image instanceof Blob ? URL.createObjectURL(design.image) : design.image;
-      form.setFieldValue(`items.${index}.thumbnailUrl`, url);
+      form.setFieldValue(`items.${index}.thumbnailUrl`, design.image);
     }
   };
 
@@ -67,11 +74,13 @@ export const InvoiceItemsTable: React.FC<InvoiceItemsTableProps> = ({ form }) =>
               <Table.Tr key={index}>
                 <Table.Td>
                   {item.thumbnailUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    <SafeImage
                       src={item.thumbnailUrl}
+                      w={40}
+                      h={40}
+                      radius="sm"
                       alt="Thumb"
-                      style={{ width: 40, height: 40, objectFit: 'contain' }}
+                      style={{ objectFit: 'contain' }}
                     />
                   ) : (
                     <Text size="xs" c="dimmed">

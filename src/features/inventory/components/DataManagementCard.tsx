@@ -40,10 +40,10 @@ export function DataManagementCard() {
   return (
     <Paper
       p="lg"
-      radius="24px"
+      radius="lg"
       shadow="md"
       withBorder
-      bg="white"
+      bg="var(--mantine-color-body)"
       mt="md"
       style={{ position: 'relative', overflow: 'hidden' }}
     >
@@ -107,7 +107,7 @@ export function DataManagementCard() {
         </FileButton>
       </Stack>
 
-      <Text size="xs" c="dimmed" style={{ textAlign: 'center' }} mt="md" px="xs" lh="1.3">
+      <Text size="xs" c="dimmed" ta="center" mt="md" px="xs" lh="1.3">
         * Restoring will completely overwrite the local database with backup records.
       </Text>
     </Paper>

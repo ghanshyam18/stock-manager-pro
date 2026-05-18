@@ -13,7 +13,8 @@ import { useUIStore } from '@/shared/store/useUIStore';
  * - Precision-aligned to the bottom edge.
  */
 export function BottomNavigation() {
-  const { activeTab, setActiveTab } = useUIStore();
+  const activeTab = useUIStore((state) => state.activeTab);
+  const setActiveTab = useUIStore((state) => state.setActiveTab);
 
   const tabs = [
     { id: 'inventory', icon: PackageSearch, label: 'Inventory' },
@@ -31,13 +32,13 @@ export function BottomNavigation() {
         left: 0,
         right: 0,
         zIndex: 100,
-        borderRadius: '28px 28px 0 0',
-        borderTop: '1px solid rgba(0, 0, 0, 0.05)',
-        backgroundColor: '#ffffff', // Use solid hex to prevent transparency gaps
+        borderRadius: 'var(--mantine-radius-lg) var(--mantine-radius-lg) 0 0',
+        borderTop: '1px solid var(--mantine-color-default-border)',
+        backgroundColor: 'var(--mantine-color-body)', // Theme-compliant solid background
         // Use padding-bottom to handle safe areas on mobile devices
         paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)',
         paddingTop: '12px',
-        boxShadow: '0 -8px 25px rgba(0, 0, 0, 0.08)',
+        boxShadow: '0 -8px 25px rgba(0, 0, 0, 0.05)',
         // Force hardware acceleration for pixel-perfect rendering
         transform: 'translateZ(0)',
         backfaceVisibility: 'hidden',
@@ -74,14 +75,14 @@ export function BottomNavigation() {
                   alignItems: 'center',
                   width: 44,
                   height: 44,
-                  borderRadius: '14px',
-                  backgroundColor: isActive ? 'var(--mantine-color-blue-0)' : 'transparent',
+                  borderRadius: 'var(--mantine-radius-md)',
+                  backgroundColor: isActive ? 'var(--mantine-color-blue-light)' : 'transparent',
                 }}
               >
                 <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
               </Box>
               <Text
-                size="10px"
+                size="xs"
                 fw={isActive ? 800 : 600}
                 tt="uppercase"
                 lts={0.5}

@@ -44,7 +44,7 @@ export const InvoicePartySection: React.FC<InvoicePartySectionProps> = ({ form }
 
   return (
     <Paper p="md" radius="md" withBorder shadow="xs" mb="lg">
-      <Title order={5} mb="md" c="dimmed" style={{ textTransform: 'uppercase', letterSpacing: 1 }}>
+      <Title order={5} mb="md" c="dimmed" tt="uppercase" lts={1}>
         Party Details
       </Title>
       <SimpleGrid cols={{ base: 1, md: 3 }} spacing="md">

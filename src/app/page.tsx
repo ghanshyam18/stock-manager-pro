@@ -16,7 +16,8 @@ import { useUIStore } from '@/shared/store/useUIStore';
  * can precisely fill the viewport for stable virtualization.
  */
 export default function Home() {
-  const { activeTab, setActiveTab } = useUIStore();
+  const activeTab = useUIStore((state) => state.activeTab);
+  const setActiveTab = useUIStore((state) => state.setActiveTab);
 
   // Prevent accidental exit
   usePreventExit(true);
@@ -27,7 +28,7 @@ export default function Home() {
 
   return (
     <Box
-      bg="gray.1"
+      bg="var(--mantine-color-body)"
       style={{
         height: '100vh',
         display: 'flex',
@@ -35,19 +36,12 @@ export default function Home() {
         overflow: 'hidden', // Prevent double scrollbars
       }}
     >
-      <header
-        style={{
-          padding: '12px 16px',
-          backgroundColor: 'white',
-          borderBottom: '1px solid var(--mantine-color-gray-2)',
-          zIndex: 100,
-        }}
-      >
+      <Paper component="header" radius={0} py="xs" px="md" withBorder style={{ zIndex: 100 }}>
         <Container size="sm">
           <Group justify="space-between" align="center">
             <Text
               component="h1"
-              size="24px"
+              size="xl"
               fw={900}
               variant="gradient"
               gradient={{ from: 'blue', to: 'cyan' }}
@@ -57,9 +51,9 @@ export default function Home() {
             </Text>
           </Group>
         </Container>
-      </header>
+      </Paper>
 
-      <main style={{ flexGrow: 1, position: 'relative', overflow: 'hidden' }}>
+      <Box component="main" style={{ flexGrow: 1, position: 'relative', overflow: 'hidden' }}>
         <Container
           size="sm"
           px="xs"
@@ -84,7 +78,7 @@ export default function Home() {
             <Transition mounted={activeTab === 'add'} transition="fade" duration={300}>
               {(styles) => (
                 <Box style={{ ...styles, flexGrow: 1, overflowY: 'auto', paddingBottom: '80px' }}>
-                  <Paper p="lg" radius="24px" shadow="md" withBorder bg="white">
+                  <Paper p="lg" radius="lg" shadow="md" withBorder bg="var(--mantine-color-body)">
                     <Title order={2} mb="xl" px="xs" fw={900}>
                       Add New Stock
                     </Title>
@@ -97,7 +91,7 @@ export default function Home() {
             </Transition>
           )}
         </Container>
-      </main>
+      </Box>
 
       <BottomNavigation />
     </Box>

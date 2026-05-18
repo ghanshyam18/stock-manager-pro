@@ -1,10 +1,10 @@
-import { pdf } from '@react-pdf/renderer';
 import React from 'react';
 
 import { InvoicePdfDocument } from '../components/InvoicePdfDocument';
 import { invoiceService } from '../services/invoiceService';
 
 export const downloadInvoicePdf = async (invoiceId: number): Promise<void> => {
+  const objectUrlsToRevoke: string[] = [];
   try {
     const { invoice, items } = await invoiceService.getInvoiceWithItems(invoiceId);
 
@@ -14,12 +14,19 @@ export const downloadInvoicePdf = async (invoiceId: number): Promise<void> => {
         const design = await invoiceService.getDesign(item.designNo);
         let thumbnailUrl = undefined;
         if (design?.image) {
-          thumbnailUrl =
-            design.image instanceof Blob ? URL.createObjectURL(design.image) : design.image;
+          if (design.image instanceof Blob) {
+            thumbnailUrl = URL.createObjectURL(design.image);
+            objectUrlsToRevoke.push(thumbnailUrl);
+          } else {
+            thumbnailUrl = design.image;
+          }
         }
         return { ...item, thumbnailUrl };
       })
     );
+
+    // Dynamically import @react-pdf/renderer to reduce initial bundle size significantly
+    const { pdf } = await import('@react-pdf/renderer');
 
     // Generate the PDF blob
     const blob = await pdf(
@@ -35,10 +42,19 @@ export const downloadInvoicePdf = async (invoiceId: number): Promise<void> => {
     link.click();
     document.body.removeChild(link);
 
-    // Clean up
+    // Clean up the PDF blob URL
     URL.revokeObjectURL(url);
   } catch (error) {
     console.error('Failed to generate or download PDF', error);
     throw error;
+  } finally {
+    // Clean up all dynamically created design thumbnail Object URLs to prevent memory leaks
+    objectUrlsToRevoke.forEach((url) => {
+      try {
+        URL.revokeObjectURL(url);
+      } catch (e) {
+        console.error('Failed to revoke object URL:', e);
+      }
+    });
   }
 };

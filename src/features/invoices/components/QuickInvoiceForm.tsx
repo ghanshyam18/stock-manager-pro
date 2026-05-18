@@ -35,7 +35,7 @@ export interface QuickInvoiceFormValues {
     designNo: string;
     quantity: number;
     unitPrice: number;
-    thumbnailUrl?: string;
+    thumbnailUrl?: Blob | string;
   }[];
 }
 
@@ -138,12 +138,7 @@ export const QuickInvoiceForm: React.FC = () => {
       <InvoicePartySection form={form} />
 
       <Paper p="md" radius="md" withBorder shadow="xs" mb="lg">
-        <Title
-          order={5}
-          mb="md"
-          c="dimmed"
-          style={{ textTransform: 'uppercase', letterSpacing: 1 }}
-        >
+        <Title order={5} mb="md" c="dimmed" tt="uppercase" lts={1}>
           Invoice Details
         </Title>
         <Grid>
@@ -171,12 +166,7 @@ export const QuickInvoiceForm: React.FC = () => {
       <InvoiceItemsTable form={form} />
 
       <Paper p="md" radius="md" withBorder shadow="xs" mb={100}>
-        <Title
-          order={5}
-          mb="md"
-          c="dimmed"
-          style={{ textTransform: 'uppercase', letterSpacing: 1 }}
-        >
+        <Title order={5} mb="md" c="dimmed" tt="uppercase" lts={1}>
           Calculations & Totals
         </Title>
         <Grid>
@@ -259,12 +249,7 @@ export const QuickInvoiceForm: React.FC = () => {
           {/* Mobile Footer */}
           <Stack gap="xs" hiddenFrom="sm" w="100%">
             <Group justify="space-between" align="center">
-              <Text
-                size="xs"
-                c="dimmed"
-                fw={700}
-                style={{ textTransform: 'uppercase', letterSpacing: 1 }}
-              >
+              <Text size="xs" c="dimmed" fw={700} tt="uppercase" lts={1}>
                 Total Due
               </Text>
               <Title order={4} c="blue.7">

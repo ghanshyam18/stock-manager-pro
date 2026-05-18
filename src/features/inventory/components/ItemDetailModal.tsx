@@ -99,7 +99,7 @@ export function ItemDetailModal({
       <ModalHeader onClose={() => context.closeModal(id)} />
 
       {/* Main Scroll Viewport - This MUST be the only scrollable area */}
-      <div
+      <Box
         ref={scrollRef}
         style={{
           flex: 1,
@@ -112,7 +112,7 @@ export function ItemDetailModal({
         data-testid="modal-scroll-area"
       >
         {/* Virtualized Inner Container */}
-        <div
+        <Box
           style={{
             height: `${virtualizer.getTotalSize()}px`,
             width: '100%',
@@ -125,7 +125,7 @@ export function ItemDetailModal({
             const entry = history[historyIndex];
 
             return (
-              <div
+              <Box
                 key={virtualRow.key}
                 data-index={virtualRow.index}
                 ref={virtualizer.measureElement}
@@ -189,10 +189,10 @@ export function ItemDetailModal({
                     <HistoryRecordCard entry={entry} onDelete={handleDelete} />
                   </Box>
                 ) : null}
-              </div>
+              </Box>
             );
           })}
-        </div>
+        </Box>
 
         {/* Loading Footer */}
         {hasMore && (
@@ -207,7 +207,7 @@ export function ItemDetailModal({
             )}
           </Center>
         )}
-      </div>
+      </Box>
 
       {/* Local Delete Confirmation Modal - Bypasses global stack to keep details modal visible in background */}
       <Modal
@@ -270,8 +270,8 @@ function HistoryRecordCard({
       withBorder
       shadow="xs"
       style={{
-        backgroundColor: 'var(--mantine-color-white)',
-        borderColor: 'var(--mantine-color-gray-1)',
+        backgroundColor: 'var(--mantine-color-body)',
+        borderColor: 'var(--mantine-color-default-border)',
       }}
       data-testid="history-record-card"
     >
@@ -282,7 +282,7 @@ function HistoryRecordCard({
             size="sm"
             fw={800}
             style={{
-              color: 'var(--mantine-color-gray-9)',
+              color: 'var(--mantine-color-text)',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -307,13 +307,13 @@ function HistoryRecordCard({
             <Text
               size="sm"
               fw={800}
-              style={{ color: 'var(--mantine-color-gray-9)', lineHeight: 1.2 }}
+              style={{ color: 'var(--mantine-color-text)', lineHeight: 1.2 }}
             >
               ₹{totalValue.toLocaleString()}
             </Text>
 
             {/* Unit rate subscript */}
-            <Text size="xs" color="dimmed" fw={600} style={{ fontSize: '10px' }}>
+            <Text size="xs" color="dimmed" fw={600}>
               rate: ₹{entry.price} / Pc
             </Text>
           </Stack>
@@ -324,6 +324,7 @@ function HistoryRecordCard({
               color="red"
               radius="xl"
               size="md"
+              aria-label="Delete history entry"
               onClick={(e) => {
                 e.stopPropagation();
                 onDelete(entry.id);
@@ -362,6 +363,7 @@ function ModalHeader({ onClose }: { onClose: () => void }) {
         radius="xl"
         color="gray"
         data-testid="close-modal-button"
+        aria-label="Close modal"
       >
         <X size={24} />
       </ActionIcon>
@@ -404,7 +406,6 @@ function ItemHeroSection({
             order={1}
             fw={900}
             style={{
-              fontSize: '24px',
               letterSpacing: '-0.5px',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -427,7 +428,6 @@ function ItemHeroSection({
               fw={900}
               c="teal.8"
               style={{
-                fontSize: '24px',
                 letterSpacing: '-0.3px',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',

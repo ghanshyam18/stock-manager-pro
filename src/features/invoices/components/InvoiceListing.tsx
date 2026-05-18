@@ -192,7 +192,8 @@ export function InvoiceListing({
                 return (
                   <UnstyledButton
                     key={virtualRow.key}
-                    component="div"
+                    className="hover-row"
+                    aria-label={`View invoice ${invoice.invoiceNo} for ${invoice.partyName}`}
                     style={{
                       position: 'absolute',
                       top: 0,
@@ -204,15 +205,7 @@ export function InvoiceListing({
                       alignItems: 'center',
                       padding: '0 16px',
                       borderBottom: '1px solid var(--mantine-color-gray-1)',
-                      transition: 'background-color 0.15s ease',
                     }}
-                    // Using Mantine's built-in styles for hover if possible,
-                    // otherwise inline style with a class is okay if it's in a global css.
-                    // But here I'll use a simpler approach that avoids <style>
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.backgroundColor = 'var(--mantine-color-gray-0)')
-                    }
-                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                   >
                     <Text w="15%" fw={600} c="dimmed" size="sm">
                       {invoice.invoiceNo}
@@ -232,6 +225,7 @@ export function InvoiceListing({
                         color="blue"
                         size="lg"
                         radius="md"
+                        aria-label={`Download PDF for invoice ${invoice.invoiceNo}`}
                         onClick={(e) => {
                           e.stopPropagation();
                           handleDownloadPdf(invoice.id!);

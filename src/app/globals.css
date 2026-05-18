@@ -84,3 +84,11 @@ input[type='date']::-webkit-calendar-picker-indicator {
 input[type='date'] {
   position: relative;
 }
+
+.hover-row {
+  transition: background-color 0.15s ease;
+}
+
+.hover-row:hover {
+  background-color: var(--mantine-color-default-hover);
+}
