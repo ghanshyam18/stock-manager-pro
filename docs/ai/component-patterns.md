@@ -8,7 +8,7 @@ This document defines the guidelines and best practices for building reusable UI
 
 To avoid boilerplate and maintain a unified design system, extract custom components according to these strict rules:
 
-1. **The "Rule of Two":** If a specific visual layout composition, stylized configuration, or complex card layout (like the "Metric Block") is repeated in two or more files, it MUST be extracted into a dedicated, reusable component in `shared/components/` or the local feature's `components/` folder.
+1. **The "Rule of Two":** If a specific visual layout composition, stylized configuration, or complex card layout is repeated in two or more files, it MUST be extracted into a dedicated, reusable component in the shared components directory or features directory.
 2. **Never Re-invent Mantine:** If a feature or layout behavior can be solved using standard Mantine properties (e.g. padding, borders, shadows), do not write a custom wrapper or class.
 
 ---
@@ -64,7 +64,7 @@ Never construct structural gaps by manually styling child margins inside parent 
   <button style={{ marginTop: 8 }}>Action</button>
 </div>
 
-// Correct FSD/Mantine Standard: Stack-driven gutters
+// Correct Standard: Stack-driven gutters
 <Stack gap="xl">
   <Stack gap="xs">
     <Title order={2}>Title</Title>
@@ -94,7 +94,7 @@ To provide a satisfying and premium feel that mimics a native mobile application
 Interactive buttons and buttons styled as cards should transition smoothly when hovered, focused, or clicked.
 
 ```css
-/* Define standard animations in globals.css or CSS modules */
+/* Define standard animations in global stylesheets */
 .interactive-scale-card {
   transition:
     transform 150ms ease,
@@ -113,9 +113,9 @@ Interactive buttons and buttons styled as cards should transition smoothly when 
 }
 ```
 
-- When using Mantine elements, apply classes like `.hover-card` (defined in [globals.css](file:///home/ghanshyam/.gemini/antigravity/scratch/stock-management-app/src/app/globals.css#L68-L76)) or use the button active scales defined in the central theme default props:
+- When using Mantine elements, apply classes like standard hover cards or use the button active scales defined in the global provider settings:
   ```typescript
-  // Providers.tsx Button defaults
+  // global provider Button defaults
   styles: {
     root: {
       transition: 'transform 100ms ease';

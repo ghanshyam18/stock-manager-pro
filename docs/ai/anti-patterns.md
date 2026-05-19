@@ -10,7 +10,7 @@ This catalog outlines forbidden coding paradigms, styling violations, and databa
 
 Using React event handlers (`onMouseEnter`, `onMouseLeave`) to manually alter style colors and override background styling directly in the DOM.
 
-**Forbidden Example (from [InvoiceListing.tsx](file:///home/ghanshyam/.gemini/antigravity/scratch/stock-management-app/src/features/invoices/components/InvoiceListing.tsx#L212-L215)):**
+**Forbidden Example:**
 
 ```typescript
 onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--mantine-color-gray-0)')}
@@ -25,7 +25,7 @@ onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
 
 ### Correct Refactored Pattern
 
-Standardize hover behaviors using native CSS Modules or global utility classes (like `.hover-card` in [globals.css](file:///home/ghanshyam/.gemini/antigravity/scratch/stock-management-app/src/app/globals.css#L68)):
+Standardize hover behaviors using native CSS Modules or global utility classes (such as hover classes in global stylesheets):
 
 ```typescript
 // Correct Mantine v9 styling wrapper
@@ -38,12 +38,12 @@ Standardize hover behaviors using native CSS Modules or global utility classes (
 
 ### The Offense
 
-Fetching full tables of data into Javascript arrays via `.toArray()` and executing O(N) filtering, grouping, or aggregations in browser memory.
+Fetching full tables of data into JavaScript arrays via `.toArray()` and executing O(N) filtering, grouping, or aggregations in browser memory.
 
-**Forbidden Example (from [useInventory.ts](file:///home/ghanshyam/.gemini/antigravity/scratch/stock-management-app/src/features/inventory/hooks/useInventory.ts#L132-L161)):**
+**Forbidden Example:**
 
 ```typescript
-let collection = db.inventory.toCollection();
+let collection = db.transactions.toCollection();
 // Loads thousands of transaction records into JS memory
 await collection.each((item) => {
   const existing = groups.get(item.designNo);
@@ -58,7 +58,7 @@ await collection.each((item) => {
 
 ### Correct Refactored Pattern
 
-Let the database do the work. Utilize pre-materialized aggregates (like keeping summary stats in the `designs` master table) or leverage B-Tree compound index filters (like `[designNo+date]`) coupled with `.limit()` constraints.
+Let the database do the work. Utilize pre-materialized aggregates (such as keeping summary statistics in a master summary table) or leverage B-Tree compound index filters coupled with `.limit()` constraints.
 
 ---
 
@@ -66,12 +66,12 @@ Let the database do the work. Utilize pre-materialized aggregates (like keeping 
 
 ### The Offense
 
-Embedding highly complex domain business rules (recalculating total inventory quantities, calculating average prices, transfers between catalogs) inside low-level Dexie lifecycle hooks (`creating`, `updating`, `deleting`).
+Embedding highly complex domain business rules (recalculating total inventory quantities, calculating average prices, transferring category totals) inside low-level database lifecycle hooks (e.g. database creation or update interceptors).
 
-**Forbidden Example (from [db.ts](file:///home/ghanshyam/.gemini/antigravity/scratch/stock-management-app/src/features/inventory/services/db.ts#L205)):**
+**Forbidden Example:**
 
 ```typescript
-this.inventory.hook('creating', (primKey, obj, transaction) => {
+this.transactions.hook('creating', (primKey, obj, transaction) => {
   // Recalculates total values and writes to designs table directly in low-level DB hook
 });
 ```
@@ -84,7 +84,7 @@ this.inventory.hook('creating', (primKey, obj, transaction) => {
 
 ### Correct Refactored Pattern
 
-Move calculations to a clean Service layer (`inventoryService.ts`), executing operations inside explicit transactional blocks:
+Move calculations to a clean Service layer, executing operations inside explicit transactional blocks:
 
 ```typescript
 export async function addStockTransaction(data: StockData) {

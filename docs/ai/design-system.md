@@ -6,7 +6,7 @@ This document describes the design tokens, visual hierarchy, atomic design struc
 
 ## 1. Unified Theme Tokens & SSOT
 
-The visual style is built entirely on Mantine 9 design tokens. All spacing, typography, colors, shadows, and radii are governed by the Mantine theme defined in [Providers.tsx](file:///home/ghanshyam/.gemini/antigravity/scratch/stock-management-app/src/app/Providers.tsx).
+The visual style is built entirely on Mantine 9 design tokens. All spacing, typography, colors, shadows, and radii are governed by the Mantine theme defined in the global providers configuration.
 
 ### Brand Color Palette
 
@@ -37,8 +37,8 @@ The primary brand palette is a sleek, curated royal blue shade designed for high
 
 The project uses two premium font sets to separate reading comfort from bold structural UI indicators.
 
-1. **Headings:** Plus Jakarta Sans (`var(--font-jakarta)`) or Outfit (premium look).
-2. **Body Text:** Inter (`var(--font-inter)`).
+1. **Headings:** Plus Jakarta Sans or Outfit (premium look).
+2. **Body Text:** Inter.
 
 ### Typography Scale & Token Mapping
 
@@ -96,9 +96,9 @@ Mobile devices with screen cutouts (like iPhone notch models and home indicators
 
 ### Standardized Bottom ActionBar Primitive
 
-When creating a sticky or fixed footer (like [BottomNavigation.tsx](file:///home/ghanshyam/.gemini/antigravity/scratch/stock-management-app/src/shared/components/BottomNavigation.tsx) or [QuickInvoiceForm.tsx](file:///home/ghanshyam/.gemini/antigravity/scratch/stock-management-app/src/features/invoices/components/QuickInvoiceForm.tsx) totals submit bar), the layout must use the following structural rules:
+When creating a sticky or fixed footer (like global navigation bars or form submission panels), the layout must use the following structural rules:
 
-1. **Opaque Background:** Background must be solid (`var(--mantine-color-body)` or a solid hex value) with a border boundary, preventing background list text from overlapping visually during scroll.
+1. **Opaque Background:** Background must be solid (`var(--mantine-color-body)` or a solid theme color) with a border boundary, preventing background list text from overlapping visually during scroll.
 2. **Safe Area Inset:** Apply iOS bottom safe area padding using:
    ```css
    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);

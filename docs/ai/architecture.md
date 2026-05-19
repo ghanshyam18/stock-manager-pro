@@ -11,28 +11,20 @@ The codebase is organized according to domain boundaries rather than infrastruct
 ```
 src/
 ├── app/                  # Application initialization, global providers, App Router
-│   ├── Providers.tsx     # Theme Provider and global modal definitions
-│   └── globals.css       # Clean global overrides and base variables
-├── features/             # Business modules
-│   ├── inventory/        # Stock management and design catalogs
-│   └── invoices/         # Billing and PDF generation
+├── features/             # Business modules (domain cohesion)
 └── shared/               # Universal elements shared across multiple domains
-    ├── components/       # Primitives (e.g., SafeImage, BottomNavigation)
-    ├── hooks/            # Universal helpers (e.g., useMediaQuery)
-    ├── store/            # Global UI state (Zustand)
-    └── theme/            # Shared theme overrides and styles
 ```
 
 ### Module Boundaries & Folder Cohesion
 
-Every feature folder (e.g., `src/features/inventory/`) contains a standardized sub-structure:
+Every feature folder (e.g., `src/features/<domain>/`) contains a standardized sub-structure:
 
-- `components/`: UI specific to that feature (e.g., [AddStockForm.tsx](file:///home/ghanshyam/.gemini/antigravity/scratch/stock-management-app/src/features/inventory/components/AddStockForm.tsx)).
-- `hooks/`: Domain-specific business logic hooks and queries (e.g., [useInventory.ts](file:///home/ghanshyam/.gemini/antigravity/scratch/stock-management-app/src/features/inventory/hooks/useInventory.ts)).
-- `services/`: Data access layers, repositories, database connections, and migrations (e.g., [db.ts](file:///home/ghanshyam/.gemini/antigravity/scratch/stock-management-app/src/features/inventory/services/db.ts)).
+- `components/`: UI specific to that feature (e.g., feature form inputs, data tables).
+- `hooks/`: Domain-specific business logic hooks and live queries.
+- `services/`: Data access layers, database connection files, and migrations.
 
 > [!IMPORTANT]
-> **Cross-Imports Rule:** Feature modules must be highly isolated. A component inside `features/invoices` may import public types or models from `features/inventory`, but must never directly import internal components or internal hooks from other features. If a UI element needs to be shared, it must be promoted to the `shared/` directory.
+> **Cross-Imports Rule:** Feature modules must be highly isolated. A component inside one feature domain may import public types or models from another feature domain, but must never directly import internal components or internal hooks from other features. If a UI element needs to be shared, it must be promoted to the `src/shared/` directory.
 
 ---
 
@@ -42,27 +34,27 @@ This application has no central database server or remote API. It is an **offlin
 
 - **IndexedDB via Dexie.js:** Dexie.js provides a robust, developer-friendly B-tree indexing abstraction over browser IndexedDB.
 - **Relational Mapping:** Database schemas are normalized to reduce duplicate storage. The primary schema includes:
-  - `designs`: The catalog master table, housing unique design names and binary images (`designNo` is the primary key).
-  - `inventory`: Individual stock transactions (quantity and price deltas mapped to specific `designNo` entries).
+  - `designs`: The catalog master table, housing unique design names and binary images (primary B-Tree lookup key).
+  - `inventory`: Individual stock transactions (quantity and price deltas mapped to design entries).
   - `parties`: Customer directory.
   - `invoices` & `invoiceItems`: Normalized billing history records.
 
 ### Database Versioning & Migrations
 
-All database modifications must undergo strict, progressive schema versioning in [db.ts](file:///home/ghanshyam/.gemini/antigravity/scratch/stock-management-app/src/features/inventory/services/db.ts).
+All database modifications must undergo strict, progressive schema versioning.
 
-- Never modify past `.version(X)` declarations.
-- Introduce schema increments by chaining `.version(Y).stores({ ... })` and performing data transformation inside `.upgrade(async tx => { ... })`.
-- **Image Binary Optimization:** As of database version 3, raw images are stored as binary `Blob` objects rather than Base64 strings. This increases lookup speeds by 10x and eliminates memory spikes in mobile WebKit.
+- Never modify past version declarations.
+- Introduce schema increments by chaining new stores and performing data transformation inside dynamic upgrade callbacks.
+- **Image Binary Optimization:** Raw images are stored as binary `Blob` objects rather than Base64 strings. This increases lookup speeds by 10x and eliminates memory spikes in mobile WebKit.
 
 ---
 
 ## 3. Decoupling Business Rules from DB Hooks
 
-Historically, database aggregates (such as keeping `designs` catalog totals synced whenever an `inventory` row is written) were handled inside Dexie hook interceptors:
+Historically, database aggregates (such as keeping catalog totals synced whenever a transaction row is written) were handled inside database hook interceptors:
 
 ```typescript
-// Legacy Anti-Pattern inside db.ts
+// Legacy Anti-Pattern
 this.inventory.hook('creating', (primKey, obj, transaction) => {
   // Direct modification of designs table triggered inside infrastructure hook
 });
@@ -71,14 +63,14 @@ this.inventory.hook('creating', (primKey, obj, transaction) => {
 This infrastructure-coupled design is highly discouraged because:
 
 1. It is hard to mock or unit test business calculations.
-2. Error failures are swallowed inside low-level IndexedDB threads.
+2. Error failures are swallowed inside low-level database threads.
 3. Batch operations trigger an avalanche of individual Read-Modify-Write disk transactions.
 
 ### Refactored Pattern: Repository/Service Layer
 
 All complex mutations affecting multiple tables must be extracted into explicit service files:
 
-- Maintain business logic within dedicated services (e.g., `inventoryService.ts`).
+- Maintain business logic within dedicated services (e.g., domain service helpers).
 - Perform multiple table operations within a unified, atomic transaction block:
 
   ```typescript
@@ -111,19 +103,19 @@ The application orchestrates three types of state to ensure real-time UI updates
 
 ```mermaid
 graph TD
-    DB[(IndexedDB - Dexie)] -->|useLiveQuery Reactive Hook| Hook[Feature Hook: useInventory]
-    Zustand[UI Store: useUIStore] -->|Atomic Selectors| Hook
+    DB[(IndexedDB - Dexie)] -->|Reactive Live Query Hook| Hook[Domain Custom Hook]
+    Zustand[UI Store: Global UI state] -->|Atomic Selectors| Hook
     Hook -->|Read-Only Data| UI[Presentation UI Components]
     UI -->|Service Transactions| DB
 ```
 
 ### 1. Database Reactive State
 
-All data listing and statistics are read through `useLiveQuery` inside feature hooks. Whenever IndexedDB is modified (via transactions or service layers), `useLiveQuery` automatically triggers, causing the relevant React component to update without any manual polling or global context dispatchers.
+All data listing and statistics are read through reactive live query hooks. Whenever IndexedDB is modified (via transactions or service layers), the queries automatically trigger, causing the relevant React component to update without any manual polling or global context dispatchers.
 
 ### 2. Global UI State (Zustand)
 
-Universal application settings, UI active tabs, and navigation statuses are persisted in a single global store: [useUIStore.ts](file:///home/ghanshyam/.gemini/antigravity/scratch/stock-management-app/src/shared/store/useUIStore.ts).
+Universal application settings, UI active tabs, and navigation statuses are persisted in a single global store.
 
 - Components must strictly query global UI state using **atomic selectors**:
 
@@ -137,4 +129,4 @@ Universal application settings, UI active tabs, and navigation statuses are pers
 
 ### 3. Local UI State
 
-Standard transient UI values (e.g., modal states, temporary form inputs, text values) use React `useState` and are kept as close to leaf nodes as possible.
+Standard transient UI values (e.g., modal states, temporary form inputs, text values) use React state and are kept as close to leaf nodes as possible.

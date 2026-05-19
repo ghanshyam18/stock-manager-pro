@@ -60,13 +60,13 @@ For advanced or dynamic flex layouts that cannot be solved easily using `<Group>
 
 ## 3. Form Standards (`@mantine/form`)
 
-All data entry forms (e.g., [AddStockForm.tsx](file:///home/ghanshyam/.gemini/antigravity/scratch/stock-management-app/src/features/inventory/components/AddStockForm.tsx), [QuickInvoiceForm.tsx](file:///home/ghanshyam/.gemini/antigravity/scratch/stock-management-app/src/features/invoices/components/QuickInvoiceForm.tsx)) must be built using Mantine's native form system.
+All data entry forms must be built using Mantine's native form system.
 
 - **Unified Validation Hooks:** Utilize `useForm` for state tracking and client validation.
 - **Form Formats:**
   - **Inputs:** `<TextInput>`, `<NumberInput>`, `<Textarea>`
   - **Selects:** `<Select>`, `<Combobox>` (For dynamic, live-search searchable lists)
-  - **Date Controls:** Standard text inputs with `type="date"` styled as Mantine inputs (using standard classes or Mantine components).
+  - **Date Controls:** Standard text inputs styled as Mantine inputs (using standard classes or Mantine components).
 - **Validation Feedbacks:** Set form errors dynamically. Provide instant visual validation on inputs:
 
   ```typescript
@@ -122,14 +122,14 @@ notifications.show({
 
 Modal overlays are configured globally to maintain visual cohesion:
 
-- **Standard Overlay Settings:** Blur `3` and opacity `0.55` defined in [Providers.tsx](file:///home/ghanshyam/.gemini/antigravity/scratch/stock-management-app/src/app/Providers.tsx#L53-L56).
-- **Desktop/Mobile Adaptability:** Full-screen overlays on mobile screens should utilize bottom `<Drawer>` drawers rather than center `<Modal>` modals. Center modals are reserved for tablet/desktop profiles.
+- **Standard Overlay Settings:** Blur and opacity values are set centrally.
+- **Desktop/Mobile Adaptability:** Full-screen overlays on mobile screens should utilize bottom drawers rather than centered modals. Centered modals are reserved for tablet/desktop profiles.
 
 ### 3. Loaders & Skeletons
 
 During async database retrievals, prevent layout shift using:
 
-- **Skeletons:** Match the approximate size of the expected component using `<Skeleton>` (e.g. [InventorySkeleton.tsx](file:///home/ghanshyam/.gemini/antigravity/scratch/stock-management-app/src/features/inventory/components/InventorySkeleton.tsx)).
+- **Skeletons:** Match the approximate size of the expected component using `<Skeleton>` layouts.
 - **Loaders:** Use `<Loader color="blue" size="sm" type="dots" />` for inline status feedback.
 
 ---
@@ -148,7 +148,7 @@ As a core guideline, all interactive elements must remain completely accessible 
     <TrashIcon size={16} />
   </ActionIcon>
   ```
-- **Focus Rings:** Never hide or strip focus rings from interactive elements. Maintain Mantine's built-in focus styling or use custom high-visibility borders for `:focus-visible` pseudo-states.
+- **Focus Rings:** Never hide or strip focus rings from interactive elements. Maintain Mantine's built-in focus styling or use custom high-visibility borders for focus-visible pseudo-states.
 
 ---
 

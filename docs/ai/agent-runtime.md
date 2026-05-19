@@ -10,7 +10,7 @@ This document governs the mandatory runtime-driven development execution workflo
 graph TD
     A[Start Request] --> B[1. Read agent-runtime.md]
     B --> C[2. Load All Project Documentation]
-    C --> D[3. Build Project Understanding]
+    B --> D[3. Build Project Understanding]
     D --> E[4. Analyze the Request]
     E --> F[5. Implement Changes]
     F --> G[6. Run Quality Gates & Validation]
@@ -23,7 +23,7 @@ graph TD
 
 ### 2. Load All Project Documentation
 
-- Inspect and read all files under `/docs/ai/` and the `/AI_ENGINEERING_CONSTITUTION.md` to ensure domain-specific rules are completely loaded into context.
+- Inspect and read all files under the AI documentation directory and the central engineering constitution to ensure domain-specific rules are completely loaded into context.
 
 ### 3. Build Project Understanding
 
@@ -31,7 +31,7 @@ graph TD
 
 ### 4. Analyze the Request
 
-- Plan changes with a strict focus on offline-first storage patterns, Mantine 9 styling, mobile safe-areas, and accessibility constraints.
+- Plan changes with a strict focus on offline-first storage patterns, Mantine styling, mobile safe-areas, and accessibility constraints.
 
 ### 5. Implement Changes
 
