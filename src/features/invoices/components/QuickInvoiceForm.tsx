@@ -18,6 +18,7 @@ import React, { useState } from 'react';
 
 import { invoiceService } from '../services/invoiceService';
 import { downloadInvoicePdf } from '../utils/downloadInvoicePdf';
+import { BusinessProfileSection } from './BusinessProfileSection';
 import { InvoiceItemsTable } from './InvoiceItemsTable';
 import { InvoicePartySection } from './InvoicePartySection';
 
@@ -131,6 +132,7 @@ export const QuickInvoiceForm: React.FC = () => {
   return (
     <form onSubmit={form.onSubmit(handleSubmit)}>
       <Stack gap="lg" style={{ paddingBottom: '120px' }}>
+        <BusinessProfileSection />
         <InvoicePartySection form={form} />
 
         <Paper p="md" radius="lg" withBorder shadow="xs">

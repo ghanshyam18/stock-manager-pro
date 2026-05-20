@@ -152,11 +152,24 @@ const styles = StyleSheet.create({
 interface InvoicePdfDocumentProps {
   invoice: Invoice;
   items: (InvoiceItem & { thumbnailUrl?: string })[];
+  businessProfile?: {
+    name: string;
+    address: string;
+    contact: string;
+  };
 }
 
-export const InvoicePdfDocument: React.FC<InvoicePdfDocumentProps> = ({ invoice, items }) => {
+export const InvoicePdfDocument: React.FC<InvoicePdfDocumentProps> = ({
+  invoice,
+  items,
+  businessProfile,
+}) => {
   const totalQty = items.reduce((acc, curr) => acc + Number(curr.quantity), 0);
   const amountInWords = numberToIndianWords(invoice.grandTotal);
+
+  const profileName = businessProfile?.name || 'Your Company Name';
+  const profileAddress = businessProfile?.address || '123 Business Street\nCity, State, ZIP';
+  const profileContact = businessProfile?.contact || 'Phone: +91 98765 43210';
 
   return (
     <Document>
@@ -167,10 +180,9 @@ export const InvoicePdfDocument: React.FC<InvoicePdfDocumentProps> = ({ invoice,
           {/* Header Block */}
           <View style={styles.headerGrid}>
             <View style={styles.headerLeft}>
-              <Text style={styles.companyName}>Your Company Name</Text>
-              <Text>123 Business Street</Text>
-              <Text>City, State, ZIP</Text>
-              <Text>Phone: +91 98765 43210</Text>
+              <Text style={styles.companyName}>{profileName}</Text>
+              <Text>{profileAddress}</Text>
+              <Text>{profileContact}</Text>
 
               <Text style={styles.billToTitle}>Buyer (Bill to)</Text>
               <Text style={styles.valueText}>{invoice.partyName}</Text>
@@ -366,7 +378,7 @@ export const InvoicePdfDocument: React.FC<InvoicePdfDocumentProps> = ({ invoice,
             </View>
             <View style={styles.footerRight}>
               <Text style={{ textAlign: 'right', fontFamily: 'Helvetica-Bold' }}>
-                for Your Company Name
+                for {profileName}
               </Text>
               <View style={styles.signatureBox}>
                 <Text>Authorised Signatory</Text>

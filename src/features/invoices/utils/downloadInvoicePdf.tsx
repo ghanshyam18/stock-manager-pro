@@ -28,9 +28,24 @@ export const downloadInvoicePdf = async (invoiceId: number): Promise<void> => {
     // Dynamically import @react-pdf/renderer to reduce initial bundle size significantly
     const { pdf } = await import('@react-pdf/renderer');
 
+    // Safely load business profile from localStorage
+    let businessProfile = undefined;
+    try {
+      const stored = localStorage.getItem('stockly_business_profile');
+      if (stored) {
+        businessProfile = JSON.parse(stored);
+      }
+    } catch (e) {
+      console.error('Failed to parse business profile for PDF:', e);
+    }
+
     // Generate the PDF blob
     const blob = await pdf(
-      <InvoicePdfDocument invoice={invoice} items={itemsWithThumbs} />
+      <InvoicePdfDocument
+        invoice={invoice}
+        items={itemsWithThumbs}
+        businessProfile={businessProfile}
+      />
     ).toBlob();
 
     // Trigger download
