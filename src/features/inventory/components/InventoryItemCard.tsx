@@ -1,4 +1,4 @@
-import { ActionIcon, Card, Group, Stack, Text, Title } from '@mantine/core';
+import { ActionIcon, Box, Card, Group, Stack, Text } from '@mantine/core';
 import { ChevronRight, Package } from 'lucide-react';
 import { memo } from 'react';
 
@@ -14,55 +14,55 @@ interface InventoryItemCardProps {
 export const InventoryItemCard = memo(({ item, onSelect }: InventoryItemCardProps) => {
   return (
     <Card
+      component="button"
       padding="sm"
       radius="lg"
       withBorder
+      shadow="xs"
+      className="hover-card"
       style={{
-        backgroundColor: 'var(--mantine-color-white)',
-        borderColor: 'var(--mantine-color-gray-2)',
-        boxShadow: 'var(--mantine-shadow-xs)',
-        transition: 'transform 150ms ease, box-shadow 150ms ease',
+        textAlign: 'left',
+        display: 'block',
+        width: '100%',
         cursor: 'pointer',
+        backgroundColor: 'var(--mantine-color-body)',
       }}
       onClick={() => onSelect(item)}
       data-testid={`inventory-item-${item.designNo}`}
     >
       <Group wrap="nowrap" gap="md" align="center" style={{ height: '100%' }}>
         {/* Aspect Ratio Safe Image Frame */}
-        <div style={{ position: 'relative', flexShrink: 0 }}>
+        <Box style={{ position: 'relative', flexShrink: 0 }}>
           <SafeImage
             src={item.image}
             w={80}
             h={80}
             radius="md"
             alt={item.designNo}
+            fit="cover"
             style={{
-              objectFit: 'cover',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+              boxShadow: 'var(--mantine-shadow-xs)',
             }}
             data-testid="item-image"
           />
-        </div>
+        </Box>
 
         {/* Content Section */}
-        <Stack gap={6} style={{ flex: 1, minWidth: 0 }}>
-          <Title
-            order={3}
-            size="h5"
+        <Stack gap="xs" style={{ flex: 1, minWidth: 0 }}>
+          <Text
+            size="md"
             fw={900}
+            truncate
             style={{
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
               letterSpacing: '-0.3px',
-              color: 'var(--mantine-color-gray-9)',
+              color: 'var(--mantine-color-text)',
             }}
             data-testid="item-title"
           >
             {item.designNo}
-          </Title>
+          </Text>
 
-          {/* Minimalist parameters without any text labels */}
+          {/* Minimalist parameters */}
           <Group gap="md" wrap="nowrap" align="center">
             {/* Quantity representation: Icon + Value */}
             <Group gap={4} wrap="nowrap" style={{ color: 'var(--mantine-color-blue-6)' }}>
@@ -72,7 +72,7 @@ export const InventoryItemCard = memo(({ item, onSelect }: InventoryItemCardProp
               </Text>
             </Group>
 
-            {/* Total Value representation: Currency + Value */}
+            {/* Total Value representation */}
             <Text size="sm" fw={800} c="teal.7">
               ₹{item.totalValue.toLocaleString()}
             </Text>
@@ -80,7 +80,14 @@ export const InventoryItemCard = memo(({ item, onSelect }: InventoryItemCardProp
         </Stack>
 
         {/* Click indicator arrow */}
-        <ActionIcon variant="subtle" color="gray" radius="xl" size="md" style={{ flexShrink: 0 }}>
+        <ActionIcon
+          variant="subtle"
+          color="gray"
+          radius="xl"
+          size="md"
+          style={{ flexShrink: 0 }}
+          aria-label="View Details"
+        >
           <ChevronRight size={16} strokeWidth={3} />
         </ActionIcon>
       </Group>

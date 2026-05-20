@@ -1,0 +1,98 @@
+# Cursor Rules — Stock Management App
+
+This repository is a standards-driven engineering system. Follow every rule below strictly.
+
+## Project Identity
+
+- **Stack**: Next.js 16 (App Router, static export) · Mantine 9 · Dexie.js (IndexedDB) · Zustand · TypeScript
+- **Architecture**: Offline-first, local-first. No backend. All data persists in IndexedDB via Dexie.js.
+- **Target**: Mobile-first, touch-optimized, premium native-like UX.
+- **CRITICAL**: Do NOT add `fetch` calls to a non-existent API. Use domain service files under `src/features/<domain>/services/`.
+
+## Next.js Rules
+
+- This is NOT the Next.js you know. Read `node_modules/next/dist/docs/` before writing code.
+- Static export only (`output: 'export'`). No API routes. No server-side features.
+- Set `'use client'` at the highest page/layout node, not per-file.
+
+## Architecture (Feature-Sliced Design)
+
+```
+src/
+├── app/          # App Router pages, global providers
+├── features/     # Domain modules (inventory, invoices)
+│   └── <domain>/
+│       ├── components/
+│       ├── hooks/
+│       └── services/
+├── shared/       # Truly global primitives only
+└── types/        # Global TypeScript definitions
+```
+
+- Features must NEVER import internal components/hooks from other features.
+- Only multi-domain primitives belong in `src/shared/`.
+
+## React Engineering Standards
+
+- Pure components where possible. Avoid unnecessary rerenders.
+- NEVER use `useEffect` for derived calculations. Compute directly during render.
+- NEVER duplicate state. Derive values from existing state/props.
+- Use `useMemo`/`useCallback` only for measurable performance gains.
+- Prefer composition (children, render props) over monolithic components.
+- Zustand: Never consume the entire store. Export atomic selector hooks.
+- Decouple search keystrokes from DB queries using deferred value hooks.
+
+## Mantine Standards (UI Operating System)
+
+- Mantine is the ONLY UI system. Use it exhaustively before creating anything custom.
+- ALL spacing, colors, typography, radii, shadows MUST come from Mantine theme tokens.
+- ZERO inline styles for static styling. Only dynamic calculations (virtualization offsets) excepted.
+- Use Mantine primitives: `<Box>`, `<Stack>`, `<Group>`, `<Text>`, `<Title>`, `<Paper>`, `<Button>`.
+- Layout via `gap` props, not margin hacks.
+- Dark-mode ready: `var(--mantine-color-body)`, `var(--mantine-color-text)` — never hardcoded hex.
+- Mobile-first: Safe area insets on fixed footers. 44px minimum touch targets.
+- Do NOT create custom spacing systems, typography systems, or button systems.
+
+## TypeScript Standards
+
+- `any` is forbidden. ESLint enforces `@typescript-eslint/no-explicit-any`.
+- Type-safe props. Extend Mantine's `BoxProps` or equivalent.
+- No `as any`, no `as unknown as T` without documented justification.
+
+## Performance Standards
+
+- Virtualization mandatory for lists > 50 items (`@tanstack/react-virtual`).
+- NEVER use `.toArray()` on full database tables. Use B-Tree indexes, `.limit()`.
+- Lazy-load heavy deps (PDF generators, exporters) via dynamic `import()`.
+- Always revoke Blob Object URLs on unmount or replacement.
+
+## Forbidden Anti-Patterns
+
+1. `onMouseEnter`/`onMouseLeave` for style changes → Use CSS hover states
+2. `.toArray()` on full DB tables → Use indexed queries with `.limit()`
+3. Business logic in DB hooks → Use explicit service layer with transactions
+4. Inline `style={{ }}` for static values → Use Mantine theme props
+5. `useEffect` for derived state → Compute during render
+6. Whole Zustand store consumption → Use atomic selectors
+7. `onClick` on `<div>` without semantics → Use `component="button"` polymorphism
+
+## Quality Gates (ALL must pass)
+
+```bash
+npm run format      # Prettier
+npm run lint        # ESLint
+npm run type-check  # TypeScript compiler
+npm run build       # Next.js production build
+```
+
+## Deep References
+
+Detailed standards with code examples in `docs/ai/`:
+- `architecture.md` — FSD, persistence, state flow
+- `coding-standards.md` — React, hooks, state management
+- `mantine-standards.md` — Theme tokens, forms, overlays, typography
+- `component-patterns.md` — Composition, abstraction, API design
+- `performance.md` — Virtualization, memory, code-splitting
+- `anti-patterns.md` — Forbidden patterns with corrections
+- `quality-gates.md` — Validation playbooks
+- `accessibility.md` — ARIA, focus, contrast, touch targets

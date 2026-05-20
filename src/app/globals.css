@@ -1,18 +1,8 @@
-:root {
-  --background: #f8f9fa;
-  --foreground: #212529;
-}
-
-[data-mantine-color-scheme='dark'] {
-  --background: #1a1b1e;
-  --foreground: #c1c2c5;
-}
-
 html,
 body {
   height: 100%;
-  background-color: var(--background);
-  color: var(--foreground);
+  background-color: var(--mantine-color-body);
+  color: var(--mantine-color-text);
   font-family: var(--font-inter), sans-serif;
   /* Prevent pull-to-refresh on mobile and horizontal bounce */
   overscroll-behavior: none;
@@ -50,12 +40,12 @@ textarea,
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #dee2e6;
+  background: var(--mantine-color-gray-3);
   border-radius: 10px;
 }
 
 [data-mantine-color-scheme='dark'] ::-webkit-scrollbar-thumb {
-  background: #373a40;
+  background: var(--mantine-color-dark-4);
 }
 
 /* Smooth transitions for all theme changes */
@@ -65,12 +55,60 @@ body {
     color 0.3s ease;
 }
 
+/* Premium Surface Interactions */
+.surface-card {
+  background-color: var(--mantine-color-body);
+  border: 1px solid var(--mantine-color-default-border);
+  box-shadow: var(--mantine-shadow-xs);
+  border-radius: var(--mantine-radius-lg);
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease,
+    border-color 150ms ease;
+}
+
 .hover-card {
-  transition: all 0.2s ease;
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease,
+    border-color 150ms ease;
 }
 
 .hover-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--mantine-shadow-md);
+  transform: translateY(-2px);
+  box-shadow: var(--mantine-shadow-sm);
   border-color: var(--mantine-color-blue-3) !important;
+}
+
+.hover-card:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.hover-row {
+  transition: background-color 150ms ease;
+}
+
+.hover-row:hover {
+  background-color: var(--mantine-color-default-hover);
+}
+
+/* Remove browser-native calendar icons to prevent unnecessary data:SVG network loads */
+input[type='date']::-webkit-calendar-picker-indicator {
+  display: none;
+  -webkit-appearance: none;
+}
+
+input[type='date'] {
+  position: relative;
+}
+
+/* Safe areas bottom helper */
+.safe-bottom-padding {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--mantine-spacing-sm));
+}
+
+/* Hardware accelerated transitions */
+.accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }

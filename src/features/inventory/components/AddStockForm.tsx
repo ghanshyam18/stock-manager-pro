@@ -46,7 +46,7 @@ export function AddStockForm({ onClear }: AddStockFormProps) {
 
   return (
     <form onSubmit={form.onSubmit(handleSubmit)} data-testid="add-stock-form">
-      <Stack p="md" gap="md">
+      <Stack gap="md">
         <Autocomplete
           label="Design No"
           placeholder="e.g. D-101"
@@ -54,7 +54,7 @@ export function AddStockForm({ onClear }: AddStockFormProps) {
           renderOption={({ option }) => {
             const richOption = designOptions.find((opt) => opt.value === option.value);
             return (
-              <Group gap="sm">
+              <Group gap="sm" wrap="nowrap">
                 {richOption?.image ? (
                   <SafeImage src={richOption.image} w={32} h={32} radius="sm" fit="cover" />
                 ) : (
@@ -62,7 +62,7 @@ export function AddStockForm({ onClear }: AddStockFormProps) {
                     <Package size={16} />
                   </Avatar>
                 )}
-                <Text size="sm" fw={500}>
+                <Text size="sm" fw={700}>
                   {option.value}
                 </Text>
               </Group>
@@ -76,11 +76,11 @@ export function AddStockForm({ onClear }: AddStockFormProps) {
         {existingDesign && (
           <Stack
             gap="xs"
-            p="sm"
+            p="md"
             style={{
-              border: '1px solid var(--mantine-color-gray-2)',
-              borderRadius: '16px',
-              backgroundColor: 'var(--mantine-color-gray-0)',
+              border: '1px solid var(--mantine-color-default-border)',
+              borderRadius: 'var(--mantine-radius-md)',
+              backgroundColor: 'var(--mantine-color-default-hover)',
             }}
           >
             <Text size="xs" fw={800} c="dimmed" tt="uppercase" lts={1}>
@@ -88,7 +88,8 @@ export function AddStockForm({ onClear }: AddStockFormProps) {
             </Text>
             {existingDesign.image ? (
               <Box
-                style={{ position: 'relative', width: '100%', height: 160 }}
+                h={160}
+                style={{ position: 'relative', width: '100%' }}
                 data-testid="existing-image-container"
               >
                 <SafeImage
@@ -109,7 +110,7 @@ export function AddStockForm({ onClear }: AddStockFormProps) {
               checked={updateImageToggle}
               onChange={(event) => setUpdateImageToggle(event.currentTarget.checked)}
               data-testid="toggle-update-image"
-              fw={600}
+              fw={700}
               size="sm"
               mt="xs"
             />
@@ -131,7 +132,8 @@ export function AddStockForm({ onClear }: AddStockFormProps) {
 
         {imagePreview && showUpload && (
           <Box
-            style={{ position: 'relative', width: '100%', height: 200 }}
+            h={200}
+            style={{ position: 'relative', width: '100%' }}
             data-testid="image-preview-container"
           >
             <SafeImage src={imagePreview} alt="Preview" fit="contain" h={200} radius="md" />
@@ -139,7 +141,9 @@ export function AddStockForm({ onClear }: AddStockFormProps) {
               variant="filled"
               color="red"
               size="xs"
-              style={{ position: 'absolute', top: 5, right: 5 }}
+              pos="absolute"
+              top={5}
+              right={5}
               onClick={clearImage}
               data-testid="clear-image-button"
             >
@@ -181,7 +185,7 @@ export function AddStockForm({ onClear }: AddStockFormProps) {
           leftSection={<Save size={18} />}
           size="md"
           mt="md"
-          color="blue"
+          color="brand.6"
           data-testid="submit-stock-button"
         >
           Save Stock Item

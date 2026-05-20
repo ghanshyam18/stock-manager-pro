@@ -40,10 +40,10 @@ export function DataManagementCard() {
   return (
     <Paper
       p="lg"
-      radius="24px"
-      shadow="md"
+      radius="lg"
+      shadow="xs"
       withBorder
-      bg="white"
+      bg="var(--mantine-color-body)"
       mt="md"
       style={{ position: 'relative', overflow: 'hidden' }}
     >
@@ -66,7 +66,7 @@ export function DataManagementCard() {
       />
 
       <Stack gap="xs" mb="md">
-        <Title order={3} fw={900} size="h4">
+        <Title order={4} fw={900}>
           Data Backup & Portability
         </Title>
         <Text size="xs" c="dimmed" lh="1.4">
@@ -82,7 +82,7 @@ export function DataManagementCard() {
           fullWidth
           size="md"
           leftSection={<Download size={18} />}
-          radius="xl"
+          radius="md"
           onClick={handleExport}
           data-testid="export-db-button"
         >
@@ -98,7 +98,7 @@ export function DataManagementCard() {
               fullWidth
               size="md"
               leftSection={<Upload size={18} />}
-              radius="xl"
+              radius="md"
               data-testid="import-db-button"
             >
               Import Backup (JSON)
@@ -107,7 +107,7 @@ export function DataManagementCard() {
         </FileButton>
       </Stack>
 
-      <Text size="xs" c="dimmed" style={{ textAlign: 'center' }} mt="md" px="xs" lh="1.3">
+      <Text size="xs" c="dimmed" ta="center" mt="md" px="xs" lh="1.3">
         * Restoring will completely overwrite the local database with backup records.
       </Text>
     </Paper>

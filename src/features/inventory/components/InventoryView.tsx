@@ -1,6 +1,6 @@
 'use client';
 
-import { Stack } from '@mantine/core';
+import { Box, Stack } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { modals } from '@mantine/modals';
 
@@ -49,16 +49,16 @@ export function InventoryView() {
       style={{ flexGrow: 1, height: '100%', position: 'relative', overflow: 'hidden' }}
     >
       <Stack gap="md">
-        <div style={{ opacity: isStale ? 0.7 : 1, transition: 'opacity 200ms ease' }}>
+        <Box style={{ opacity: isStale ? 0.7 : 1, transition: 'opacity 200ms ease' }}>
           <InventorySearch
             search={search}
             onSearchChange={setSearch}
             designSuggestions={designSuggestions || []}
           />
-        </div>
+        </Box>
         <InventoryStats stats={stats} />
       </Stack>
-      <div style={{ flexGrow: 1, position: 'relative', minHeight: 0 }}>
+      <Box style={{ flexGrow: 1, position: 'relative', minHeight: 0 }}>
         {isLoading ? (
           <InventoryListingSkeleton />
         ) : (
@@ -72,7 +72,7 @@ export function InventoryView() {
             isLoadingMore={isLoadingMore}
           />
         )}
-      </div>
+      </Box>
     </Stack>
   );
 }

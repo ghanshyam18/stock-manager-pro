@@ -1,6 +1,6 @@
 'use client';
 
-import { Box, Container, Group, Paper, Text, Title, Transition } from '@mantine/core';
+import { Box, Container, Group, Paper, Text, Transition } from '@mantine/core';
 
 import { AddStockForm } from '@/features/inventory/components/AddStockForm';
 import { DataManagementCard } from '@/features/inventory/components/DataManagementCard';
@@ -16,7 +16,8 @@ import { useUIStore } from '@/shared/store/useUIStore';
  * can precisely fill the viewport for stable virtualization.
  */
 export default function Home() {
-  const { activeTab, setActiveTab } = useUIStore();
+  const activeTab = useUIStore((state) => state.activeTab);
+  const setActiveTab = useUIStore((state) => state.setActiveTab);
 
   // Prevent accidental exit
   usePreventExit(true);
@@ -27,42 +28,33 @@ export default function Home() {
 
   return (
     <Box
-      bg="gray.1"
+      bg="var(--mantine-color-body)"
+      h="100dvh"
+      className="accelerated"
       style={{
-        height: '100vh',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden', // Prevent double scrollbars
       }}
     >
-      <header
-        style={{
-          padding: '12px 16px',
-          backgroundColor: 'white',
-          borderBottom: '1px solid var(--mantine-color-gray-2)',
-          zIndex: 100,
-        }}
-      >
-        <Container size="sm">
-          <Group justify="space-between" align="center">
-            <Text
-              component="h1"
-              size="24px"
-              fw={900}
-              variant="gradient"
-              gradient={{ from: 'blue', to: 'cyan' }}
-              style={{ letterSpacing: '-0.5px' }}
-            >
-              Stockly
-            </Text>
-          </Group>
-        </Container>
-      </header>
+      <Paper component="header" radius={0} py="sm" px="md" withBorder style={{ zIndex: 100 }}>
+        <Group justify="space-between" align="center">
+          <Text
+            component="h1"
+            size="lg"
+            fw={900}
+            variant="gradient"
+            gradient={{ from: 'brand.6', to: 'brand.8' }}
+          >
+            Stockly
+          </Text>
+        </Group>
+      </Paper>
 
-      <main style={{ flexGrow: 1, position: 'relative', overflow: 'hidden' }}>
+      <Box component="main" style={{ flexGrow: 1, position: 'relative', overflow: 'hidden' }}>
         <Container
           size="sm"
-          px="xs"
+          px="md"
           py="md"
           style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
         >
@@ -83,11 +75,11 @@ export default function Home() {
           {activeTab === 'add' && (
             <Transition mounted={activeTab === 'add'} transition="fade" duration={300}>
               {(styles) => (
-                <Box style={{ ...styles, flexGrow: 1, overflowY: 'auto', paddingBottom: '80px' }}>
-                  <Paper p="lg" radius="24px" shadow="md" withBorder bg="white">
-                    <Title order={2} mb="xl" px="xs" fw={900}>
+                <Box style={{ ...styles, flexGrow: 1, overflowY: 'auto', paddingBottom: '90px' }}>
+                  <Paper p="lg" radius="lg" withBorder bg="var(--mantine-color-body)">
+                    <Text component="h2" size="xl" fw={900} mb="lg" px="xs">
                       Add New Stock
-                    </Title>
+                    </Text>
                     <AddStockForm onClear={() => setActiveTab('inventory')} />
                   </Paper>
 
@@ -97,7 +89,7 @@ export default function Home() {
             </Transition>
           )}
         </Container>
-      </main>
+      </Box>
 
       <BottomNavigation />
     </Box>
