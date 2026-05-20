@@ -1,6 +1,6 @@
 # Engineering Architecture Overview
 
-This document outlines the client-side system architecture, the Feature-Sliced Design (FSD) boundaries, persistence paradigms, and state flow hierarchies that govern this application.
+This document outlines the system architecture, Feature-Sliced Design boundaries, Next.js app router patterns, persistence paradigms, and state flow hierarchies.
 
 ---
 
@@ -12,30 +12,81 @@ The codebase is organized according to domain boundaries rather than infrastruct
 src/
 ├── app/                  # Application initialization, global providers, App Router
 ├── features/             # Business modules (domain cohesion)
-└── shared/               # Universal elements shared across multiple domains
+│   ├── inventory/        # Stock management domain
+│   │   ├── components/   # Feature-specific UI
+│   │   ├── hooks/        # Domain hooks and live queries
+│   │   └── services/     # Dexie data access layer
+│   └── invoices/         # Billing domain
+│       ├── components/
+│       ├── hooks/
+│       ├── services/
+│       └── utils/
+├── shared/               # Universal elements shared across multiple domains
+│   ├── components/       # SafeImage, BottomNavigation
+│   ├── hooks/            # useNativeBack, usePreventExit
+│   ├── store/            # Zustand global UI state
+│   └── utils/            # Currency, date, image helpers
+└── types/                # Global TypeScript definitions
 ```
 
 ### Module Boundaries & Folder Cohesion
 
-Every feature folder (e.g., `src/features/<domain>/`) contains a standardized sub-structure:
+Every feature folder contains a standardized sub-structure:
 
-- `components/`: UI specific to that feature (e.g., feature form inputs, data tables).
+- `components/`: UI specific to that feature (forms, data tables, cards).
 - `hooks/`: Domain-specific business logic hooks and live queries.
 - `services/`: Data access layers, database connection files, and migrations.
 
 > [!IMPORTANT]
-> **Cross-Imports Rule:** Feature modules must be highly isolated. A component inside one feature domain may import public types or models from another feature domain, but must never directly import internal components or internal hooks from other features. If a UI element needs to be shared, it must be promoted to the `src/shared/` directory.
+> **Cross-Imports Rule:** Feature modules must be highly isolated. A component inside one feature domain may import public types or models from another feature domain, but must never directly import internal components or internal hooks from other features. If a UI element needs to be shared, it must be promoted to `src/shared/`.
 
 ---
 
-## 2. Persistence Layer: Offline-First IndexedDB (Dexie)
+## 2. Next.js App Router Architecture
+
+### Static Export Model
+
+The application uses `output: 'export'` for a fully static, client-side deployment. This means:
+
+- **No API routes.** All data operations happen via IndexedDB.
+- **No server components with data fetching.** Server components can exist for layout purposes, but all dynamic logic requires `'use client'`.
+- **No server actions.** Form submissions go directly to Dexie service functions.
+
+### Client Boundary Strategy
+
+Because the app relies entirely on browser-level storage (IndexedDB), nearly all UI components and hooks require the `'use client'` directive.
+
+**Rule:** Set client boundaries at the **highest page/layout node** to avoid redundant file-level declaration boilerplate. Child components imported within a client boundary are automatically client components.
+
+```typescript
+// src/app/page.tsx — sets the client boundary once
+'use client';
+
+import { InventoryDashboard } from '@/features/inventory/components/InventoryDashboard';
+
+export default function HomePage() {
+  return <InventoryDashboard />;
+}
+```
+
+### Rendering Strategy
+
+| Strategy             | When to Use                                             |
+| -------------------- | ------------------------------------------------------- |
+| **Server Component** | Root `layout.tsx` (metadata, fonts, providers wrapper)  |
+| **Client Component** | Everything with state, effects, browser APIs, IndexedDB |
+| **Dynamic Import**   | Heavy secondary features (PDF generation, data export)  |
+
+---
+
+## 3. Persistence Layer: Offline-First IndexedDB (Dexie)
 
 This application has no central database server or remote API. It is an **offline-first, local-first browser application**.
 
-- **IndexedDB via Dexie.js:** Dexie.js provides a robust, developer-friendly B-tree indexing abstraction over browser IndexedDB.
+- **IndexedDB via Dexie.js:** Provides a robust, developer-friendly B-tree indexing abstraction over browser IndexedDB.
 - **Relational Mapping:** Database schemas are normalized to reduce duplicate storage. The primary schema includes:
-  - `designs`: The catalog master table, housing unique design names and binary images (primary B-Tree lookup key).
-  - `inventory`: Individual stock transactions (quantity and price deltas mapped to design entries).
+  - `designs`: The catalog master table (primary lookup key with binary images).
+  - `inventory`: Individual stock transactions (quantity and price deltas).
   - `parties`: Customer directory.
   - `invoices` & `invoiceItems`: Normalized billing history records.
 
@@ -45,61 +96,47 @@ All database modifications must undergo strict, progressive schema versioning.
 
 - Never modify past version declarations.
 - Introduce schema increments by chaining new stores and performing data transformation inside dynamic upgrade callbacks.
-- **Image Binary Optimization:** Raw images are stored as binary `Blob` objects rather than Base64 strings. This increases lookup speeds by 10x and eliminates memory spikes in mobile WebKit.
+- **Image Binary Optimization:** Raw images are stored as binary `Blob` objects rather than Base64 strings.
 
 ---
 
-## 3. Decoupling Business Rules from DB Hooks
+## 4. Decoupling Business Rules from DB Hooks
 
-Historically, database aggregates (such as keeping catalog totals synced whenever a transaction row is written) were handled inside database hook interceptors:
+All complex mutations affecting multiple tables must be extracted into explicit service files.
 
 ```typescript
-// Legacy Anti-Pattern
+// Forbidden: Business logic inside infrastructure hooks
 this.inventory.hook('creating', (primKey, obj, transaction) => {
-  // Direct modification of designs table triggered inside infrastructure hook
+  // Direct modification of designs table inside infrastructure hook
 });
 ```
 
-This infrastructure-coupled design is highly discouraged because:
+```typescript
+// Correct: Service layer with explicit transactions
+import { db } from './db';
 
-1. It is hard to mock or unit test business calculations.
-2. Error failures are swallowed inside low-level database threads.
-3. Batch operations trigger an avalanche of individual Read-Modify-Write disk transactions.
+export async function createStockTransaction(designNo: string, qty: number, price: number) {
+  return await db.transaction('rw', [db.inventory, db.designs], async () => {
+    await db.inventory.add({ designNo, quantity: qty, price, date: new Date().toISOString() });
 
-### Refactored Pattern: Repository/Service Layer
-
-All complex mutations affecting multiple tables must be extracted into explicit service files:
-
-- Maintain business logic within dedicated services (e.g., domain service helpers).
-- Perform multiple table operations within a unified, atomic transaction block:
-
-  ```typescript
-  import { db } from './db';
-
-  export async function createStockTransaction(designNo: string, qty: number, price: number) {
-    return await db.transaction('rw', [db.inventory, db.designs], async () => {
-      // 1. Insert transaction entry
-      await db.inventory.add({ designNo, quantity: qty, price, date: new Date().toISOString() });
-
-      // 2. Fetch and aggregate designs table
-      const design = await db.designs.get(designNo);
-      if (design) {
-        await db.designs.put({
-          ...design,
-          totalQuantity: design.totalQuantity + qty,
-          totalValue: design.totalValue + qty * price,
-          updatedAt: Date.now(),
-        });
-      }
-    });
-  }
-  ```
+    const design = await db.designs.get(designNo);
+    if (design) {
+      await db.designs.put({
+        ...design,
+        totalQuantity: design.totalQuantity + qty,
+        totalValue: design.totalValue + qty * price,
+        updatedAt: Date.now(),
+      });
+    }
+  });
+}
+```
 
 ---
 
-## 4. State Flow & UI Reactivity
+## 5. State Flow & UI Reactivity
 
-The application orchestrates three types of state to ensure real-time UI updates with high rendering efficiency.
+The application orchestrates three types of state:
 
 ```mermaid
 graph TD
@@ -111,7 +148,7 @@ graph TD
 
 ### 1. Database Reactive State
 
-All data listing and statistics are read through reactive live query hooks. Whenever IndexedDB is modified (via transactions or service layers), the queries automatically trigger, causing the relevant React component to update without any manual polling or global context dispatchers.
+All data listing and statistics are read through reactive live query hooks. Whenever IndexedDB is modified, the queries automatically trigger UI updates without manual polling.
 
 ### 2. Global UI State (Zustand)
 
@@ -120,13 +157,13 @@ Universal application settings, UI active tabs, and navigation statuses are pers
 - Components must strictly query global UI state using **atomic selectors**:
 
   ```typescript
-  // Correct - Re-renders only when activeTab changes
+  // Correct — Re-renders only when activeTab changes
   const activeTab = useUIStore((state) => state.activeTab);
 
-  // Forbidden - Re-renders on any store alteration
+  // Forbidden — Re-renders on any store alteration
   const uiState = useUIStore();
   ```
 
 ### 3. Local UI State
 
-Standard transient UI values (e.g., modal states, temporary form inputs, text values) use React state and are kept as close to leaf nodes as possible.
+Standard transient UI values (modal states, temporary form inputs) use React state and are kept as close to leaf nodes as possible.

@@ -1,6 +1,6 @@
-# Mantine v9 UI Standards
+# Mantine v9 UI Standards & Design System
 
-This document establishes the official coding standards, layout structures, overlay patterns, and accessibility guidelines for all **Mantine v9** component integrations in this repository.
+This document establishes the UI framework standards, design tokens, layout architecture, typography, surface elevations, form patterns, overlay systems, and theme integration rules.
 
 ---
 
@@ -10,64 +10,149 @@ Before creating any custom UI component, styling class, or wrapper element, you 
 
 > **Mantine is our entire UI Foundation:** Do not use plain HTML elements (`div`, `span`, `p`, `img`, `button`) for structural or stylized components. Always use their Mantine equivalents: `<Box>`, `<Text>`, `<Title>`, `<Image>`, `<Button>`.
 
+### What Mantine Already Solves
+
+Do NOT create custom implementations for:
+
+- Spacing systems → Use Mantine spacing tokens (`xs`, `sm`, `md`, `lg`, `xl`)
+- Typography systems → Use `<Text>`, `<Title>` with size/weight props
+- Button systems → Use `<Button>` with variants, colors, sizes
+- Modal/Drawer systems → Use `<Modal>`, `<Drawer>` with provider defaults
+- Notification systems → Use `notifications.show()` from `@mantine/notifications`
+- Form validation → Use `useForm` from `@mantine/form`
+
 ---
 
-## 2. Layout & Flex Grid Architecture
+## 2. Design Tokens & Theme SSOT
 
-To preserve a consistent responsive design, all structural grouping, grids, and alignments must use Mantine's theme-aware layout primitives:
+### Brand Color Palette
 
-### 1. Vertical Stacking: `<Stack>`
+The primary brand palette is a curated royal blue designed for high legibility and premium quality.
 
-For vertical lists or sections. Use the `gap` property instead of margin overrides.
+| Token     | Hex Value | Semantic Usage                                 |
+| --------- | --------- | ---------------------------------------------- |
+| `brand.0` | `#eef3ff` | App backgrounds, active selection backgrounds  |
+| `brand.1` | `#dce4ff` | Subtle borders, light alert backgrounds        |
+| `brand.2` | `#bac8ff` | Focus rings, card hover outlines               |
+| `brand.3` | `#91a7ff` | Inactive icon colors, secondary boundaries     |
+| `brand.4` | `#748ffc` | Disabled text, element accents                 |
+| `brand.5` | `#5c7cfa` | Muted button backgrounds                       |
+| `brand.6` | `#4c6ef5` | **Primary Color** (Active states, primary CTA) |
+| `brand.7` | `#4263eb` | Hover state primary button                     |
+| `brand.8` | `#3b5bdb` | Pressed state primary button                   |
+| `brand.9` | `#364fc7` | Text headers, dark icons                       |
+
+### Global Structural Colors
+
+- **App Canvas:** `var(--mantine-color-body)` (`#f8f9fa` Light / `#1a1b1e` Dark)
+- **Surfaces/Cards:** `var(--mantine-color-white)` Light / `#25262b` Dark
+- **Text Primary:** `var(--mantine-color-text)` (`#212529` Light / `#c1c2c5` Dark)
+
+---
+
+## 3. Typography Hierarchy
+
+The project uses two premium font sets:
+
+1. **Headings:** Plus Jakarta Sans or Outfit (premium look).
+2. **Body Text:** Inter.
+
+### Typography Scale
+
+Never use hardcoded CSS pixel font sizes. Use standard Mantine sizes:
 
 ```typescript
-// Correct
+<Title order={1} size="h1" fw={900}>   // Main Page Title
+<Title order={3} size="h3" fw={800}>   // Section Headers
+<Text size="md" fw={700}>              // Card Primary Text
+<Text size="sm" c="dimmed" fw={600}>   // Card Secondary Text
+<Text size="xs" fw={800} tt="uppercase" lts="1px"> // Metadata Tag
+```
+
+**The "Metric Block" Pattern:** A metadata label (`size="xs" fw={800} c="dimmed" tt="uppercase" lts={1}`) placed above a heavy-weighted value (`size="xl" fw={900} c="blue.7"`).
+
+---
+
+## 4. Layout & Flex Grid Architecture
+
+All structural grouping, grids, and alignments must use Mantine's theme-aware layout primitives.
+
+### Vertical Stacking: `<Stack>`
+
+```typescript
 <Stack gap="md">
   <Text>First Item</Text>
   <Text>Second Item</Text>
 </Stack>
 ```
 
-### 2. Horizontal Grouping: `<Group>`
+### Horizontal Grouping: `<Group>`
 
-For button bars, inline items, and label pairings. Always specify `justify` and `align`. Use `wrap="nowrap"` for compact mobile card layouts.
+Always specify `justify` and `align`. Use `wrap="nowrap"` for compact mobile layouts.
 
 ```typescript
-// Correct
 <Group justify="space-between" align="center" wrap="nowrap">
   <Text fw={700}>Grand Total</Text>
   <Text size="lg" c="blue.7">₹5,000</Text>
 </Group>
 ```
 
-### 3. Layout Grid: `<Grid>`
+### Layout Grid: `<Grid>`
 
-For multi-column layouts. Grid uses a 12-column layout by default. Specify the `span` prop on columns, utilizing breakpoint props for responsive shifts.
+12-column layout. Use breakpoint props for responsive shifts.
 
 ```typescript
-// Correct responsive grid
 <Grid gutter="md">
   <Grid.Col span={{ base: 12, md: 6 }}>Left Content</Grid.Col>
   <Grid.Col span={{ base: 12, md: 6 }}>Right Content</Grid.Col>
 </Grid>
 ```
 
-### 4. Flexbox Engine: `<Flex>`
+### Flexbox Engine: `<Flex>`
 
-For advanced or dynamic flex layouts that cannot be solved easily using `<Group>` or `<Stack>` (e.g. variable orders, flex-grow/shrink distributions).
+For advanced flex layouts that cannot be solved with `<Group>` or `<Stack>`.
 
 ---
 
-## 3. Form Standards (`@mantine/form`)
+## 5. Surface Elevations & Radii
 
-All data entry forms must be built using Mantine's native form system.
+- **Border Radius:** Inputs/Buttons use `radius="md"` (`8px`). Cards/Papers/Modals use `radius="lg"` (`16px`).
+- **Elevations:**
+  - Standard cards: `shadow="xs"`
+  - Floating actions: `shadow="md"`
+  - Bottom drawers: `shadow="xl"`
+- **Interactive cards** must use semantic button conversion:
+  ```typescript
+  <Card component="button" onClick={handleSelect} radius="lg" withBorder>
+  ```
 
-- **Unified Validation Hooks:** Utilize `useForm` for state tracking and client validation.
-- **Form Formats:**
-  - **Inputs:** `<TextInput>`, `<NumberInput>`, `<Textarea>`
-  - **Selects:** `<Select>`, `<Combobox>` (For dynamic, live-search searchable lists)
-  - **Date Controls:** Standard text inputs styled as Mantine inputs (using standard classes or Mantine components).
-- **Validation Feedbacks:** Set form errors dynamically. Provide instant visual validation on inputs:
+---
+
+## 6. Spacing & Mobile Container Grid
+
+| Device Breakpoint       | Gutter Spacing    | Outer Padding     | Tap Target Size |
+| ----------------------- | ----------------- | ----------------- | --------------- |
+| **Mobile (`<768px`)**   | `p="sm"` (`12px`) | `p="md"` (`16px`) | **Min 44px**    |
+| **Tablet (`<1024px`)**  | `p="md"` (`16px`) | `p="lg"` (`24px`) | Min 44px        |
+| **Desktop (`>1024px`)** | `p="lg"` (`24px`) | `p="xl"` (`32px`) | Min 40px        |
+
+### Structural Spacing Standards
+
+Gutters between logical sections must follow strict theme tokens:
+
+- **`gap="xs"` (`8px`):** Tight pairings (labels above inputs).
+- **`gap="md"` (`16px`):** Standard element spacing (form items, card contents).
+- **`gap="xl"` (`32px`):** Primary section separation (below headers, between grids and listings).
+
+---
+
+## 7. Form Standards (`@mantine/form`)
+
+All data entry forms must use Mantine's native form system.
+
+- **Unified Validation:** `useForm` for state tracking and client validation.
+- **Input Components:** `<TextInput>`, `<NumberInput>`, `<Textarea>`, `<Select>`, `<Combobox>`.
+- **Instant Visual Feedback:** Set form errors dynamically:
 
   ```typescript
   const form = useForm({
@@ -84,7 +169,6 @@ All data entry forms must be built using Mantine's native form system.
         label="Design No"
         placeholder="Enter design code"
         {...form.getInputProps('designNo')}
-        error={form.errors.designNo} // Displays native Mantine error typography
       />
     </form>
   );
@@ -92,72 +176,57 @@ All data entry forms must be built using Mantine's native form system.
 
 ---
 
-## 4. Overlay & Feedback Systems
+## 8. Overlay & Feedback Systems
 
-All modal dialogs, loading states, and notification toasts must leverage standard Mantine overlay patterns.
+### Notifications
 
-### 1. Notifications
-
-Toasts are used for all CRUD confirmation feedbacks. Never use native browser `alert()` or custom popup toast libraries.
+Toasts for all CRUD confirmations. Never use native `alert()`:
 
 ```typescript
 import { notifications } from '@mantine/notifications';
 
-// Success Toast
 notifications.show({
   title: 'Transaction Saved',
-  message: 'Stock item was successfully added to inventory.',
+  message: 'Stock item was successfully added.',
   color: 'green',
-});
-
-// Error Toast
-notifications.show({
-  title: 'Save Failed',
-  message: 'An error occurred while updating the transaction database.',
-  color: 'red',
 });
 ```
 
-### 2. Modals & Drawers
+### Modals & Drawers
 
-Modal overlays are configured globally to maintain visual cohesion:
+- Standard overlay settings (blur, opacity) configured globally in providers.
+- Full-screen mobile overlays use bottom drawers. Centered modals for desktop.
 
-- **Standard Overlay Settings:** Blur and opacity values are set centrally.
-- **Desktop/Mobile Adaptability:** Full-screen overlays on mobile screens should utilize bottom drawers rather than centered modals. Centered modals are reserved for tablet/desktop profiles.
+### Loaders & Skeletons
 
-### 3. Loaders & Skeletons
-
-During async database retrievals, prevent layout shift using:
-
-- **Skeletons:** Match the approximate size of the expected component using `<Skeleton>` layouts.
-- **Loaders:** Use `<Loader color="blue" size="sm" type="dots" />` for inline status feedback.
+- `<Skeleton>` layouts matching expected component size.
+- `<Loader color="blue" size="sm" type="dots" />` for inline feedback.
 
 ---
 
-## 5. Accessibility (a11y) Standards
+## 9. Fixed Layouts & Safe Area Insets
 
-As a core guideline, all interactive elements must remain completely accessible to screen readers and keyboard-only users.
+### Bottom ActionBar Rules
 
-- **Interactive Component Conversions:** When creating custom button cards, always pass `component="button"` to allow the browser to include the element in the focus ring chain and let users activate it via `Space` / `Enter`:
-  ```typescript
-  <Card component="button" onClick={handleSelect} radius="lg" withBorder>
-  ```
-- **Action Icons:** Every `<ActionIcon>` button that contains no raw text must receive a descriptive `aria-label`:
-  ```typescript
-  <ActionIcon aria-label="Delete stock record" color="red">
-    <TrashIcon size={16} />
-  </ActionIcon>
-  ```
-- **Focus Rings:** Never hide or strip focus rings from interactive elements. Maintain Mantine's built-in focus styling or use custom high-visibility borders for focus-visible pseudo-states.
+1. **Opaque background:** Solid `var(--mantine-color-body)` with border boundary.
+2. **Safe area inset:** Apply iOS bottom padding:
+   ```css
+   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+   ```
+3. **z-index:** `100` for layout bars, `200+` for dropdown containers.
 
 ---
 
-## 6. Theme Integration & Dynamic Dark Mode
+## 10. Theme Integration: Dark Mode
 
-All components must remain compatible with theme state switches.
+All implementations must use semantic colors for automatic dark mode support:
 
-- **Reference Theme CSS Variables:** Use Mantine's automated variables instead of hardcoding light/dark colors.
-  - Correct text color: `color: 'var(--mantine-color-text)'`
-  - Correct background: `backgroundColor: 'var(--mantine-color-body)'`
-  - Muted borders: `borderColor: 'var(--mantine-color-gray-2)'` (which translates to dark gray in dark mode).
-- **Mantine Hooks:** Use hooks like `useMantineColorScheme()` to read active scheme states when executing complex logic.
+```diff
+- <div style={{ backgroundColor: '#ffffff', borderRadius: '16px', padding: '16px' }}>
++ <Paper bg="var(--mantine-color-body)" radius="lg" p="md" withBorder>
+```
+
+- **Correct text:** `var(--mantine-color-text)`
+- **Correct background:** `var(--mantine-color-body)`
+- **Correct border:** `var(--mantine-color-default-border)`
+- **Color scheme hook:** `useMantineColorScheme()` for complex logic.

@@ -91,3 +91,24 @@ Because local databases store images as binary `Blob` files, the application rel
   ```
 
 - **Form State Upload Cleanups:** During image selection in form states, if the user uploads multiple temporary images before hitting submit, you must call `URL.revokeObjectURL(previousUrl)` for each intermediate file replaced in state.
+
+---
+
+## 5. React Rendering Performance
+
+### Component-Level Optimization
+
+- **`React.memo` for expensive components:** Apply to list items in virtualized lists and complex card layouts that receive stable props.
+- **Stable callback references:** Use `useCallback` for event handlers passed to memoized children. Avoid creating new function references on every render.
+- **State colocation:** Keep state as close to the consuming component as possible. A form input's local state should not live in a parent that re-renders unrelated siblings.
+- **Avoid render-triggering patterns:** Never create objects or arrays inline in JSX props — this defeats `React.memo`:
+
+  ```typescript
+  // FORBIDDEN: New object on every render
+  <Component style={{ margin: 10 }} data={[1, 2, 3]} />
+
+  // CORRECT: Stable references
+  const style = useMemo(() => ({ margin: 10 }), []);
+  const data = useMemo(() => [1, 2, 3], []);
+  <Component style={style} data={data} />
+  ```
