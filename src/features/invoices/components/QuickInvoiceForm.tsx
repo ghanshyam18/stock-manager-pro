@@ -10,7 +10,6 @@ import {
   Stack,
   Text,
   TextInput,
-  Title,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
@@ -80,7 +79,7 @@ export const QuickInvoiceForm: React.FC = () => {
       taxAmount,
       grandTotal,
     };
-  }, [form.values.items, form.values.discountPercentage, form.values.taxPercentage]);
+  }, [form.values]);
 
   const handleSubmit = async (values: typeof form.values) => {
     setIsSaving(true);
@@ -131,105 +130,109 @@ export const QuickInvoiceForm: React.FC = () => {
 
   return (
     <form onSubmit={form.onSubmit(handleSubmit)}>
-      <Title order={2} mb="lg">
-        New Quick Invoice
-      </Title>
+      <Stack gap="lg" style={{ paddingBottom: '120px' }}>
+        <InvoicePartySection form={form} />
 
-      <InvoicePartySection form={form} />
-
-      <Paper p="md" radius="md" withBorder shadow="xs" mb="lg">
-        <Title order={5} mb="md" c="dimmed" tt="uppercase" lts={1}>
-          Invoice Details
-        </Title>
-        <Grid>
-          <Grid.Col span={{ base: 12, md: 6 }}>
-            <TextInput
-              label="Date"
-              type="date"
-              leftSection={<Calendar size={18} strokeWidth={1.5} />}
-              {...form.getInputProps('date')}
-              required
-              size="md"
-            />
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, md: 6 }}>
-            <TextInput
-              label="Dispatched Through"
-              placeholder="e.g. Courier, Transport"
-              {...form.getInputProps('dispatchedThrough')}
-              size="md"
-            />
-          </Grid.Col>
-        </Grid>
-      </Paper>
-
-      <InvoiceItemsTable form={form} />
-
-      <Paper p="md" radius="md" withBorder shadow="xs" mb={100}>
-        <Title order={5} mb="md" c="dimmed" tt="uppercase" lts={1}>
-          Calculations & Totals
-        </Title>
-        <Grid>
-          <Grid.Col span={{ base: 12, md: 6 }}>
-            <Stack gap="md">
-              <NumberInput
-                label="Discount (%)"
-                min={0}
-                max={100}
+        <Paper p="md" radius="lg" withBorder shadow="xs">
+          <Text size="xs" fw={800} c="dimmed" tt="uppercase" lts={1} mb="md">
+            Invoice Logistics
+          </Text>
+          <Grid>
+            <Grid.Col span={{ base: 12, md: 6 }}>
+              <TextInput
+                label="Date"
+                type="date"
+                leftSection={<Calendar size={18} strokeWidth={1.5} />}
+                {...form.getInputProps('date')}
+                required
                 size="md"
-                {...form.getInputProps('discountPercentage')}
               />
-              <NumberInput
-                label="Tax (%)"
-                min={0}
-                max={100}
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, md: 6 }}>
+              <TextInput
+                label="Dispatched Through"
+                placeholder="e.g. Courier, Transport"
+                {...form.getInputProps('dispatchedThrough')}
                 size="md"
-                {...form.getInputProps('taxPercentage')}
               />
-            </Stack>
-          </Grid.Col>
+            </Grid.Col>
+          </Grid>
+        </Paper>
 
-          <Grid.Col span={{ base: 12, md: 6 }}>
-            <Paper
-              withBorder
-              style={{ backgroundColor: 'var(--mantine-color-default-hover)' }}
-              p="lg"
-              radius="md"
-              mt={{ base: 'md', md: 0 }}
-            >
-              <Stack gap="sm">
-                <Flex justify="space-between">
-                  <Text size="md">Subtotal:</Text>
-                  <Text size="md" fw={500}>
-                    ₹{totals.subtotal.toFixed(2)}
-                  </Text>
-                </Flex>
-                <Flex justify="space-between" c="red.7">
-                  <Text size="md">Discount ({form.values.discountPercentage}%):</Text>
-                  <Text size="md" fw={500}>
-                    -₹{totals.discountAmount.toFixed(2)}
-                  </Text>
-                </Flex>
-                <Flex justify="space-between" c="blue.7">
-                  <Text size="md">Tax ({form.values.taxPercentage}%):</Text>
-                  <Text size="md" fw={500}>
-                    +₹{totals.taxAmount.toFixed(2)}
-                  </Text>
-                </Flex>
-                <Divider my="sm" />
-                <Flex justify="space-between" align="center">
-                  <Text size="lg" fw={700}>
-                    Grand Total:
-                  </Text>
-                  <Text size="xl" fw={800} c="blue.6">
-                    ₹{totals.grandTotal.toFixed(2)}
-                  </Text>
-                </Flex>
+        <InvoiceItemsTable form={form} />
+
+        <Paper p="md" radius="lg" withBorder shadow="xs">
+          <Text size="xs" fw={800} c="dimmed" tt="uppercase" lts={1} mb="md">
+            Calculations & Totals
+          </Text>
+          <Grid>
+            <Grid.Col span={{ base: 12, md: 6 }}>
+              <Stack gap="md">
+                <NumberInput
+                  label="Discount (%)"
+                  min={0}
+                  max={100}
+                  size="md"
+                  {...form.getInputProps('discountPercentage')}
+                />
+                <NumberInput
+                  label="Tax (%)"
+                  min={0}
+                  max={100}
+                  size="md"
+                  {...form.getInputProps('taxPercentage')}
+                />
               </Stack>
-            </Paper>
-          </Grid.Col>
-        </Grid>
-      </Paper>
+            </Grid.Col>
+
+            <Grid.Col span={{ base: 12, md: 6 }}>
+              <Paper
+                withBorder
+                style={{ backgroundColor: 'var(--mantine-color-default-hover)' }}
+                p="lg"
+                radius="md"
+                mt={{ base: 'md', md: 0 }}
+              >
+                <Stack gap="sm">
+                  <Flex justify="space-between">
+                    <Text size="md" fw={700}>
+                      Subtotal:
+                    </Text>
+                    <Text size="md" fw={800}>
+                      ₹{totals.subtotal.toFixed(2)}
+                    </Text>
+                  </Flex>
+                  <Flex justify="space-between" c="red.7">
+                    <Text size="md" fw={700}>
+                      Discount ({form.values.discountPercentage}%):
+                    </Text>
+                    <Text size="md" fw={800}>
+                      -₹{totals.discountAmount.toFixed(2)}
+                    </Text>
+                  </Flex>
+                  <Flex justify="space-between" c="blue.7">
+                    <Text size="md" fw={700}>
+                      Tax ({form.values.taxPercentage}%):
+                    </Text>
+                    <Text size="md" fw={800}>
+                      +₹{totals.taxAmount.toFixed(2)}
+                    </Text>
+                  </Flex>
+                  <Divider my="sm" />
+                  <Flex justify="space-between" align="center">
+                    <Text size="lg" fw={800}>
+                      Grand Total:
+                    </Text>
+                    <Text size="xl" fw={900} c="blue.6">
+                      ₹{totals.grandTotal.toFixed(2)}
+                    </Text>
+                  </Flex>
+                </Stack>
+              </Paper>
+            </Grid.Col>
+          </Grid>
+        </Paper>
+      </Stack>
 
       <Box
         pos="fixed"
@@ -241,7 +244,7 @@ export const QuickInvoiceForm: React.FC = () => {
         style={{
           borderTop: '1px solid var(--mantine-color-default-border)',
           zIndex: 100,
-          boxShadow: 'var(--mantine-shadow-sm)',
+          boxShadow: 'var(--mantine-shadow-md)',
           paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)',
         }}
       >
@@ -249,12 +252,12 @@ export const QuickInvoiceForm: React.FC = () => {
           {/* Mobile Footer */}
           <Stack gap="xs" hiddenFrom="sm" w="100%">
             <Group justify="space-between" align="center">
-              <Text size="xs" c="dimmed" fw={700} tt="uppercase" lts={1}>
+              <Text size="xs" c="dimmed" fw={800} tt="uppercase" lts={1}>
                 Total Due
               </Text>
-              <Title order={4} c="blue.7">
-                ₹{totals.grandTotal.toFixed(2)}
-              </Title>
+              <Text size="lg" fw={900} c="blue.7">
+                ₹{totals.grandTotal.toLocaleString('en-IN')}
+              </Text>
             </Group>
             <Button
               type="submit"
@@ -263,16 +266,18 @@ export const QuickInvoiceForm: React.FC = () => {
               radius="md"
               leftSection={<Save size={18} />}
               loading={isSaving}
+              color="brand.6"
             >
               Save & Download PDF
             </Button>
           </Stack>
 
+          {/* Desktop Footer */}
           <Group justify="space-between" align="center" visibleFrom="sm" w="100%">
-            <Text fw={600} size="xl">
+            <Text fw={700} size="xl">
               Total Due:{' '}
-              <Text span c="blue.6" fw={700}>
-                ₹{totals.grandTotal.toFixed(2)}
+              <Text span c="blue.6" fw={900}>
+                ₹{totals.grandTotal.toLocaleString('en-IN')}
               </Text>
             </Text>
             <Button
@@ -281,6 +286,7 @@ export const QuickInvoiceForm: React.FC = () => {
               radius="md"
               leftSection={<Save size={20} />}
               loading={isSaving}
+              color="brand.6"
             >
               Save & Download PDF
             </Button>

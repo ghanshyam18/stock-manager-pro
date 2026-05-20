@@ -1,4 +1,14 @@
-import { Box, Collapse, Group, Paper, SimpleGrid, Skeleton, Stack, Text } from '@mantine/core';
+import {
+  Box,
+  Collapse,
+  Group,
+  Paper,
+  SimpleGrid,
+  Skeleton,
+  Stack,
+  Text,
+  UnstyledButton,
+} from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { ChevronDown, IndianRupee, Package, TrendingUp } from 'lucide-react';
 import { memo } from 'react';
@@ -24,13 +34,13 @@ const StatCard = memo(({ label, value, suffix, icon: Icon, color, isLoading }: S
       p="md"
       radius="lg"
       withBorder
-      shadow="sm"
+      shadow="xs"
       bg="var(--mantine-color-body)"
       data-testid={`stat-card-${label.toLowerCase().replace(' ', '-')}`}
     >
       <Group justify="space-between" wrap="nowrap">
         <Stack gap="xs" style={{ flex: 1 }}>
-          <Text size="xs" color="dimmed" fw={800} tt="uppercase" lts={1}>
+          <Text size="xs" c="dimmed" fw={800} tt="uppercase" lts={1}>
             {label}
           </Text>
           <Group gap="xs" align="baseline">
@@ -41,7 +51,7 @@ const StatCard = memo(({ label, value, suffix, icon: Icon, color, isLoading }: S
                 <Text size="xl" fw={900}>
                   {value}
                 </Text>
-                <Text size="xs" fw={700} color="dimmed">
+                <Text size="xs" fw={700} c="dimmed">
                   {suffix}
                 </Text>
               </>
@@ -55,7 +65,7 @@ const StatCard = memo(({ label, value, suffix, icon: Icon, color, isLoading }: S
             borderRadius: 'var(--mantine-radius-md)',
           }}
         >
-          <Icon size={20} color={`var(--mantine-color-${color}-light-color)`} strokeWidth={2.5} />
+          <Icon size={18} color={`var(--mantine-color-${color}-light-color)`} strokeWidth={2.5} />
         </Box>
       </Group>
     </Paper>
@@ -94,40 +104,38 @@ export function InventoryStats({ stats }: InventoryStatsProps) {
   ] as const;
 
   return (
-    <Box px="xs">
-      <Paper
-        component="button"
-        onClick={toggleStats}
-        w="100%"
-        p="xs"
-        radius="md"
-        withBorder
-        aria-label="Toggle statistics dashboard"
-        aria-expanded={statsOpened}
-        style={{
-          backgroundColor: 'var(--mantine-color-body)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          cursor: 'pointer',
-          textAlign: 'left',
-          fontFamily: 'inherit',
-        }}
-        data-testid="stats-accordion-toggle"
-      >
-        <Group gap="sm">
-          <TrendingUp size={18} color="var(--mantine-color-blue-6)" />
-          <Text fw={800} size="sm">
-            Current Results Insights
-          </Text>
-        </Group>
-        <ChevronDown
-          size={18}
+    <Box>
+      <Paper withBorder radius="md" shadow="xs" style={{ overflow: 'hidden' }}>
+        <UnstyledButton
+          onClick={toggleStats}
+          w="100%"
+          p="md"
+          aria-label="Toggle statistics dashboard"
+          aria-expanded={statsOpened}
           style={{
-            transition: 'transform 0.3s ease',
-            transform: statsOpened ? 'rotate(180deg)' : 'none',
+            backgroundColor: 'var(--mantine-color-body)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            textAlign: 'left',
           }}
-        />
+          data-testid="stats-accordion-toggle"
+        >
+          <Group gap="sm">
+            <TrendingUp size={18} color="var(--mantine-color-blue-6)" />
+            <Text fw={800} size="sm">
+              Current Results Insights
+            </Text>
+          </Group>
+          <ChevronDown
+            size={18}
+            style={{
+              transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              transform: statsOpened ? 'rotate(180deg)' : 'none',
+              color: 'var(--mantine-color-gray-5)',
+            }}
+          />
+        </UnstyledButton>
       </Paper>
 
       <Collapse expanded={statsOpened} mt="md">

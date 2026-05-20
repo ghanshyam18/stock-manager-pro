@@ -41,7 +41,7 @@ export function DataManagementCard() {
     <Paper
       p="lg"
       radius="lg"
-      shadow="md"
+      shadow="xs"
       withBorder
       bg="var(--mantine-color-body)"
       mt="md"
@@ -66,7 +66,7 @@ export function DataManagementCard() {
       />
 
       <Stack gap="xs" mb="md">
-        <Title order={3} fw={900} size="h4">
+        <Title order={4} fw={900}>
           Data Backup & Portability
         </Title>
         <Text size="xs" c="dimmed" lh="1.4">
@@ -82,7 +82,7 @@ export function DataManagementCard() {
           fullWidth
           size="md"
           leftSection={<Download size={18} />}
-          radius="xl"
+          radius="md"
           onClick={handleExport}
           data-testid="export-db-button"
         >
@@ -98,7 +98,7 @@ export function DataManagementCard() {
               fullWidth
               size="md"
               leftSection={<Upload size={18} />}
-              radius="xl"
+              radius="md"
               data-testid="import-db-button"
             >
               Import Backup (JSON)

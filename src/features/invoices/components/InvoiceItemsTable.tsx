@@ -10,7 +10,6 @@ import {
   Stack,
   Table,
   Text,
-  Title,
 } from '@mantine/core';
 import { UseFormReturnType } from '@mantine/form';
 import { Plus, Trash } from 'lucide-react';
@@ -71,7 +70,7 @@ export const InvoiceItemsTable: React.FC<InvoiceItemsTableProps> = ({ form }) =>
           {form.values.items.map((item, index: number) => {
             const rowTotal = (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0);
             return (
-              <Table.Tr key={index}>
+              <Table.Tr key={`desktop-row-${index}`}>
                 <Table.Td>
                   {item.thumbnailUrl ? (
                     <SafeImage
@@ -80,7 +79,7 @@ export const InvoiceItemsTable: React.FC<InvoiceItemsTableProps> = ({ form }) =>
                       h={40}
                       radius="sm"
                       alt="Thumb"
-                      style={{ objectFit: 'contain' }}
+                      fit="contain"
                     />
                   ) : (
                     <Text size="xs" c="dimmed">
@@ -115,7 +114,7 @@ export const InvoiceItemsTable: React.FC<InvoiceItemsTableProps> = ({ form }) =>
                   />
                 </Table.Td>
                 <Table.Td>
-                  <Text fw={500}>{rowTotal.toFixed(2)}</Text>
+                  <Text fw={700}>₹{rowTotal.toFixed(2)}</Text>
                 </Table.Td>
                 <Table.Td>
                   <ActionIcon
@@ -139,9 +138,11 @@ export const InvoiceItemsTable: React.FC<InvoiceItemsTableProps> = ({ form }) =>
       {form.values.items.map((item, index: number) => {
         const rowTotal = (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0);
         return (
-          <Card key={index} withBorder shadow="sm" radius="md">
+          <Card key={`mobile-card-${index}`} withBorder shadow="sm" radius="lg">
             <Group justify="space-between" mb="xs">
-              <Text fw={600}>Item #{index + 1}</Text>
+              <Text fw={800} size="sm">
+                Item #{index + 1}
+              </Text>
               <ActionIcon
                 color="red"
                 variant="subtle"
@@ -152,7 +153,7 @@ export const InvoiceItemsTable: React.FC<InvoiceItemsTableProps> = ({ form }) =>
               </ActionIcon>
             </Group>
 
-            <Grid>
+            <Grid gap="xs">
               <Grid.Col span={12}>
                 <Autocomplete
                   label="Design No"
@@ -185,13 +186,16 @@ export const InvoiceItemsTable: React.FC<InvoiceItemsTableProps> = ({ form }) =>
                   justify="space-between"
                   mt="xs"
                   p="xs"
-                  bg="gray.0"
-                  style={{ borderRadius: 6 }}
+                  bg="var(--mantine-color-default-hover)"
+                  style={{
+                    border: '1px solid var(--mantine-color-default-border)',
+                    borderRadius: 'var(--mantine-radius-md)',
+                  }}
                 >
-                  <Text size="sm" fw={600} c="dimmed">
+                  <Text size="xs" fw={800} c="dimmed">
                     Item Total
                   </Text>
-                  <Text fw={700} c="blue.7" size="lg">
+                  <Text fw={900} c="blue.7" size="md">
                     ₹{rowTotal.toFixed(2)}
                   </Text>
                 </Group>
@@ -204,10 +208,10 @@ export const InvoiceItemsTable: React.FC<InvoiceItemsTableProps> = ({ form }) =>
   );
 
   return (
-    <Paper p="md" radius="md" withBorder shadow="xs" mb="lg">
-      <Title order={5} mb="md" c="dimmed" style={{ textTransform: 'uppercase', letterSpacing: 1 }}>
+    <Paper p="md" radius="lg" withBorder shadow="xs">
+      <Text size="xs" fw={800} c="dimmed" tt="uppercase" lts={1} mb="md">
         Products / Designs
-      </Title>
+      </Text>
       {desktopTable}
       {mobileCards}
 
@@ -224,6 +228,7 @@ export const InvoiceItemsTable: React.FC<InvoiceItemsTableProps> = ({ form }) =>
             })
           }
           fullWidth
+          fw={700}
         >
           Add Another Item
         </Button>

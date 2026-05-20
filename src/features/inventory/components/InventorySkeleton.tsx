@@ -5,27 +5,18 @@ import { Card, Group, Skeleton, Stack } from '@mantine/core';
  */
 export function InventorySkeleton() {
   return (
-    <Card
-      padding="sm"
-      radius="lg"
-      withBorder
-      style={{
-        backgroundColor: 'var(--mantine-color-white)',
-        borderColor: 'var(--mantine-color-gray-2)',
-        boxShadow: 'var(--mantine-shadow-xs)',
-      }}
-    >
+    <Card padding="sm">
       <Group wrap="nowrap" gap="md" align="center" style={{ height: '100%' }}>
         {/* Image Skeleton */}
         <Skeleton w={80} h={80} radius="md" animate />
 
         {/* Content Section Skeleton */}
-        <Stack gap={6} style={{ flex: 1, minWidth: 0 }}>
+        <Stack gap="xs" style={{ flex: 1, minWidth: 0 }}>
           {/* Title Skeleton */}
           <Skeleton h={20} w="55%" radius="sm" animate />
 
           {/* Minimalist parameters representation */}
-          <Group gap="md" wrap="nowrap" align="center" mt={4}>
+          <Group gap="md" wrap="nowrap" align="center">
             {/* Quantity representation placeholder */}
             <Skeleton h={16} w={35} radius="sm" animate />
 
@@ -46,9 +37,9 @@ export function InventorySkeleton() {
  */
 export function InventoryListingSkeleton() {
   return (
-    <Stack gap="md" px="xs">
+    <Stack gap="md">
       {[...Array(6)].map((_, i) => (
-        <InventorySkeleton key={i} />
+        <InventorySkeleton key={`skel-${i}`} />
       ))}
     </Stack>
   );

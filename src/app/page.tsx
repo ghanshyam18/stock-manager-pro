@@ -1,6 +1,6 @@
 'use client';
 
-import { Box, Container, Group, Paper, Text, Title, Transition } from '@mantine/core';
+import { Box, Container, Group, Paper, Text, Transition } from '@mantine/core';
 
 import { AddStockForm } from '@/features/inventory/components/AddStockForm';
 import { DataManagementCard } from '@/features/inventory/components/DataManagementCard';
@@ -29,34 +29,32 @@ export default function Home() {
   return (
     <Box
       bg="var(--mantine-color-body)"
+      h="100dvh"
+      className="accelerated"
       style={{
-        height: '100vh',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden', // Prevent double scrollbars
       }}
     >
-      <Paper component="header" radius={0} py="xs" px="md" withBorder style={{ zIndex: 100 }}>
-        <Container size="sm">
-          <Group justify="space-between" align="center">
-            <Text
-              component="h1"
-              size="xl"
-              fw={900}
-              variant="gradient"
-              gradient={{ from: 'blue', to: 'cyan' }}
-              style={{ letterSpacing: '-0.5px' }}
-            >
-              Stockly
-            </Text>
-          </Group>
-        </Container>
+      <Paper component="header" radius={0} py="sm" px="md" withBorder style={{ zIndex: 100 }}>
+        <Group justify="space-between" align="center">
+          <Text
+            component="h1"
+            size="lg"
+            fw={900}
+            variant="gradient"
+            gradient={{ from: 'brand.6', to: 'brand.8' }}
+          >
+            Stockly
+          </Text>
+        </Group>
       </Paper>
 
       <Box component="main" style={{ flexGrow: 1, position: 'relative', overflow: 'hidden' }}>
         <Container
           size="sm"
-          px="xs"
+          px="md"
           py="md"
           style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
         >
@@ -77,11 +75,11 @@ export default function Home() {
           {activeTab === 'add' && (
             <Transition mounted={activeTab === 'add'} transition="fade" duration={300}>
               {(styles) => (
-                <Box style={{ ...styles, flexGrow: 1, overflowY: 'auto', paddingBottom: '80px' }}>
-                  <Paper p="lg" radius="lg" shadow="md" withBorder bg="var(--mantine-color-body)">
-                    <Title order={2} mb="xl" px="xs" fw={900}>
+                <Box style={{ ...styles, flexGrow: 1, overflowY: 'auto', paddingBottom: '90px' }}>
+                  <Paper p="lg" radius="lg" withBorder bg="var(--mantine-color-body)">
+                    <Text component="h2" size="xl" fw={900} mb="lg" px="xs">
                       Add New Stock
-                    </Title>
+                    </Text>
                     <AddStockForm onClear={() => setActiveTab('inventory')} />
                   </Paper>
 

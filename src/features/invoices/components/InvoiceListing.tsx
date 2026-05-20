@@ -39,7 +39,7 @@ export function InvoiceListing({
   const rowVirtualizer = useVirtualizer({
     count: invoices.length,
     getScrollElement: () => scrollRef.current,
-    estimateSize: () => (isMobile ? 132 : 72),
+    estimateSize: () => (isMobile ? 128 : 72),
     overscan: 10,
   });
 
@@ -59,8 +59,8 @@ export function InvoiceListing({
     return (
       <Center h={300}>
         <Stack align="center" gap="sm">
-          <Search size={48} strokeWidth={1.5} style={{ opacity: 0.2 }} />
-          <Text c="dimmed" fw={500}>
+          <Search size={48} strokeWidth={1.5} color="var(--mantine-color-gray-4)" />
+          <Text c="dimmed" fw={700}>
             No invoices found
           </Text>
         </Stack>
@@ -77,7 +77,7 @@ export function InvoiceListing({
   };
 
   return (
-    <div
+    <Box
       ref={scrollRef}
       style={{
         height: '100%',
@@ -87,7 +87,7 @@ export function InvoiceListing({
         WebkitOverflowScrolling: 'touch',
       }}
     >
-      <div
+      <Box
         style={{
           height: `${rowVirtualizer.getTotalSize()}px`,
           width: '100%',
@@ -100,7 +100,7 @@ export function InvoiceListing({
             const invoice = invoices[virtualRow.index];
             if (!invoice) return null;
             return (
-              <div
+              <Box
                 key={virtualRow.key}
                 style={{
                   position: 'absolute',
@@ -108,7 +108,7 @@ export function InvoiceListing({
                   left: 0,
                   width: '100%',
                   transform: `translateY(${virtualRow.start}px)`,
-                  padding: '4px 0',
+                  padding: '6px 0',
                 }}
               >
                 <Paper
@@ -118,23 +118,25 @@ export function InvoiceListing({
                   withBorder
                   style={{
                     backgroundColor: 'var(--mantine-color-body)',
+                    borderColor: 'var(--mantine-color-default-border)',
                   }}
+                  className="hover-card"
                 >
-                  <Group justify="space-between" mb="xs">
+                  <Group justify="space-between" mb="xs" wrap="nowrap">
                     <Box style={{ flex: 1, minWidth: 0 }}>
-                      <Text fw={800} size="lg" truncate style={{ letterSpacing: '-0.3px' }}>
+                      <Text fw={800} size="md" truncate style={{ letterSpacing: '-0.3px' }}>
                         {invoice.partyName}
                       </Text>
                       <Text size="xs" c="dimmed" fw={700}>
                         #{invoice.invoiceNo}
                       </Text>
                     </Box>
-                    <Text fw={900} size="xl" c="blue.7">
+                    <Text fw={900} size="lg" c="blue.7" style={{ flexShrink: 0 }}>
                       ₹{invoice.grandTotal.toLocaleString('en-IN')}
                     </Text>
                   </Group>
-                  <Group justify="space-between" mt="md">
-                    <Text size="sm" c="dimmed" fw={600}>
+                  <Group justify="space-between" mt="sm">
+                    <Text size="xs" c="dimmed" fw={700}>
                       {new Date(invoice.date).toLocaleDateString('en-IN')}
                     </Text>
                     <Button
@@ -143,12 +145,13 @@ export function InvoiceListing({
                       radius="md"
                       leftSection={<Download size={14} />}
                       onClick={() => handleDownloadPdf(invoice.id!)}
+                      fw={700}
                     >
                       PDF
                     </Button>
                   </Group>
                 </Paper>
-              </div>
+              </Box>
             );
           })
         ) : (
@@ -163,11 +166,11 @@ export function InvoiceListing({
                 textTransform: 'uppercase',
                 letterSpacing: '1px',
                 color: 'var(--mantine-color-dimmed)',
-                background: 'var(--mantine-color-gray-0)',
+                background: 'var(--mantine-color-default-hover)',
                 position: 'sticky',
                 top: 0,
                 zIndex: 20,
-                borderBottom: '1px solid var(--mantine-color-gray-2)',
+                borderBottom: '1px solid var(--mantine-color-default-border)',
               }}
             >
               <Box w="15%">Invoice No</Box>
@@ -179,7 +182,7 @@ export function InvoiceListing({
               </Box>
             </Box>
 
-            <div
+            <Box
               style={{
                 height: `${rowVirtualizer.getTotalSize()}px`,
                 width: '100%',
@@ -204,13 +207,13 @@ export function InvoiceListing({
                       display: 'flex',
                       alignItems: 'center',
                       padding: '0 16px',
-                      borderBottom: '1px solid var(--mantine-color-gray-1)',
+                      borderBottom: '1px solid var(--mantine-color-default-border)',
                     }}
                   >
-                    <Text w="15%" fw={600} c="dimmed" size="sm">
+                    <Text w="15%" fw={700} c="dimmed" size="sm">
                       {invoice.invoiceNo}
                     </Text>
-                    <Text w="15%" size="sm">
+                    <Text w="15%" size="sm" fw={600}>
                       {new Date(invoice.date).toLocaleDateString('en-IN')}
                     </Text>
                     <Text style={{ flexGrow: 1 }} fw={700} size="md" truncate>
@@ -223,7 +226,7 @@ export function InvoiceListing({
                       <ActionIcon
                         variant="subtle"
                         color="blue"
-                        size="lg"
+                        size="md"
                         radius="md"
                         aria-label={`Download PDF for invoice ${invoice.invoiceNo}`}
                         onClick={(e) => {
@@ -237,30 +240,30 @@ export function InvoiceListing({
                   </UnstyledButton>
                 );
               })}
-            </div>
+            </Box>
           </Box>
         )}
-      </div>
+      </Box>
 
       {/* Infinite Loader Footer */}
       <Center py={50} pb={120}>
         {isLoadingMore ? (
           <Group gap="sm">
             <Loader size="sm" color="blue" />
-            <Text size="sm" c="dimmed" fw={600}>
+            <Text size="sm" c="dimmed" fw={700}>
               Loading more invoices...
             </Text>
           </Group>
         ) : hasMore ? (
-          <Text size="xs" c="dimmed" fw={500}>
+          <Text size="xs" c="dimmed" fw={600}>
             Scroll for more ({totalCount})
           </Text>
         ) : invoices.length > 0 ? (
-          <Text size="sm" c="dimmed" fw={600}>
+          <Text size="sm" c="dimmed" fw={700}>
             End of list • {totalCount} invoices
           </Text>
         ) : null}
       </Center>
-    </div>
+    </Box>
   );
 }

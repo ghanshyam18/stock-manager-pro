@@ -1,4 +1,4 @@
-import { Autocomplete, Avatar, Group, Paper, Text } from '@mantine/core';
+import { Autocomplete, Avatar, Box, Group, Paper, Text } from '@mantine/core';
 import { Package, Search } from 'lucide-react';
 
 import { SafeImage } from '@/shared/components/SafeImage';
@@ -16,17 +16,16 @@ export function InventorySearch({
 }: InventorySearchProps) {
   return (
     <Paper
-      p="sm"
-      radius="xl"
+      p="xs"
+      radius="md"
       withBorder
-      shadow="md"
+      shadow="xs"
       style={{
         position: 'sticky',
         top: 0,
         zIndex: 100,
-        backgroundColor: 'rgba(255, 255, 255, 0.85)',
-        backdropFilter: 'blur(12px)',
-        border: '1px solid rgba(0, 0, 0, 0.05)',
+        backgroundColor: 'var(--mantine-color-body)',
+        borderColor: 'var(--mantine-color-default-border)',
       }}
     >
       <Autocomplete
@@ -38,23 +37,24 @@ export function InventorySearch({
         renderOption={({ option }) => {
           const richOption = designSuggestions.find((opt) => opt.value === option.value);
           return (
-            <Group gap="sm">
+            <Group gap="sm" wrap="nowrap">
               {richOption?.image ? (
-                <SafeImage src={richOption.image} w={32} h={32} radius="sm" fit="cover" />
+                <Box style={{ flexShrink: 0 }}>
+                  <SafeImage src={richOption.image} w={32} h={32} radius="sm" fit="cover" />
+                </Box>
               ) : (
                 <Avatar size={32} radius="sm" color="blue">
                   <Package size={16} />
                 </Avatar>
               )}
-              <Text size="sm" fw={500}>
+              <Text size="sm" fw={700} truncate>
                 {option.value}
               </Text>
             </Group>
           );
         }}
-        style={{ width: '100%' }}
         size="md"
-        radius="xl"
+        radius="md"
         variant="filled"
         maxDropdownHeight={250}
         data-testid="inventory-search-input"

@@ -1,4 +1,4 @@
-import { Center, Group, Loader, Stack, Text } from '@mantine/core';
+import { Box, Center, Group, Loader, Stack, Text } from '@mantine/core';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Search } from 'lucide-react';
 import { useEffect, useRef } from 'react';
@@ -34,7 +34,7 @@ export function InventoryHistoryList({
   const rowVirtualizer = useVirtualizer({
     count: items.length,
     getScrollElement: () => scrollRef.current,
-    estimateSize: () => (isMobile ? 120 : 110), // Slightly smaller card height since details are cleaner now
+    estimateSize: () => (isMobile ? 116 : 106),
     overscan: 10,
   });
 
@@ -54,8 +54,8 @@ export function InventoryHistoryList({
     return (
       <Center h={300}>
         <Stack align="center" gap="sm">
-          <Search size={48} strokeWidth={1} style={{ opacity: 0.5 }} />
-          <Text c="dimmed" fw={500}>
+          <Search size={48} strokeWidth={1.5} color="var(--mantine-color-gray-4)" />
+          <Text c="dimmed" fw={700} size="sm">
             No items match your filters
           </Text>
         </Stack>
@@ -64,7 +64,7 @@ export function InventoryHistoryList({
   }
 
   return (
-    <div
+    <Box
       ref={scrollRef}
       style={{
         height: '100%',
@@ -75,7 +75,7 @@ export function InventoryHistoryList({
         position: 'relative',
       }}
     >
-      <div
+      <Box
         style={{
           height: `${rowVirtualizer.getTotalSize()}px`,
           width: '100%',
@@ -87,7 +87,7 @@ export function InventoryHistoryList({
           if (!item) return null;
 
           return (
-            <div
+            <Box
               key={virtualRow.key}
               data-index={virtualRow.index}
               ref={rowVirtualizer.measureElement}
@@ -97,35 +97,35 @@ export function InventoryHistoryList({
                 left: 0,
                 width: '100%',
                 transform: `translateY(${virtualRow.start}px)`,
-                padding: '4px 0',
+                padding: '6px 0',
                 willChange: 'transform',
               }}
             >
               <InventoryItemCard item={item} onSelect={onSelect} />
-            </div>
+            </Box>
           );
         })}
-      </div>
+      </Box>
 
       {/* Enhanced Loader Footer */}
       <Center py="xl" pb={100}>
         {isLoadingMore ? (
           <Group gap="sm">
             <Loader size="sm" color="blue" />
-            <Text size="sm" c="dimmed" fw={600}>
+            <Text size="sm" c="dimmed" fw={700}>
               Fetching next batch... ({items.length} loaded)
             </Text>
           </Group>
         ) : hasMore ? (
-          <Text size="xs" c="dimmed">
+          <Text size="xs" c="dimmed" fw={600}>
             Scroll for more (Total Unique: {totalCount})
           </Text>
         ) : (
-          <Text size="sm" c="dimmed" fw={600}>
+          <Text size="sm" c="dimmed" fw={700}>
             All {totalCount} designs loaded
           </Text>
         )}
       </Center>
-    </div>
+    </Box>
   );
 }
